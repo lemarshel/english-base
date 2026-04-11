@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>English Base — News + Core Words</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div>
+        <h1>English Base</h1>
+        <p class="subtitle">Word list coming soon • news channels live</p>
+      </div>
+      <div class="search-wrap">
+    <input id="search" type="text" placeholder="Search (placeholder, word list coming soon)" />
+        <button id="clearSearch" class="ghost">Clear</button>
+      </div>
+    </header>
+
+    <section class="stats" id="stats"></section>
+
+    <section class="filters">
+      <div class="filter-block">
+        <div class="filter-title">Levels</div>
+        <div class="filter-row" id="levelFilters"></div>
+      </div>
+      <div class="filter-block">
+        <div class="filter-title">POS</div>
+        <div class="filter-row" id="posFilters"></div>
+      </div>
+      <div class="filter-block">
+        <div class="filter-title">Display</div>
+        <div class="filter-row">
+          <button id="toggleRoman" class="chip active">Romanization</button>
+          <button id="toggleEnglish" class="chip active">English gloss</button>
+        </div>
+      </div>
+      <div class="filter-block">
+        <div class="filter-title">News</div>
+        <div class="filter-row news-controls">
+          <select id="newsChannel" class="news-select"></select>
+          <select id="newsQuality" class="news-select"></select>
+          <button id="watchNews" class="chip active">Watch</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Word</th>
+            <th class="col-roman">Romanization</th>
+            <th class="col-english">English</th>
+            <th>POS</th>
+            <th>Level</th>
+          </tr>
+        </thead>
+        <tbody id="wordTable"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <div id="newsOverlay" class="overlay">
+    <div class="modal">
+      <button id="closeNews" class="close">×</button>
+      <h2>English News</h2>
+      <video id="newsPlayer" controls playsinline></video>
+      <p class="modal-note">If a stream does not play, try another channel or quality.</p>
+    </div>
+  </div>
+
+  <script src="channels.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
