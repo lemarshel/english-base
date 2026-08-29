@@ -1,79 +1,675 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>English Base — News + Core Words</title>
-  <link rel="stylesheet" href="styles.css" />
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>English Base — Core Vocabulary</title>
+<link rel="stylesheet" href="en.css">
+<style>
+#tb-row-texts{align-items:center}
+#text-btn-wrap{display:flex;gap:4px;overflow-x:auto;white-space:nowrap;padding:2px 0}
+#text-btn-wrap::-webkit-scrollbar{height:6px}
+.text-btn{min-width:22px;height:22px;padding:0 4px;font-size:11px;border:1px solid #8aa;border-radius:4px;background:#eef4f6;color:#356;cursor:pointer}
+.text-btn.active{background:#cfe3e7;border-color:#4f7c82;color:#234}
+.text-indicator{position:absolute;top:2px;left:2px;font-size:10px;line-height:1;padding:1px 3px;border:1px solid #c6d5d7;border-radius:3px;color:#4b6a6e;background:#f7fbfc;opacity:.85;font-weight:600}
+.text-hide{display:none !important}
+.grp-empty{display:none !important}
+.pos-empty{display:none !important}
+.ex-filter-btn{margin-left:6px;padding:1px 4px;font-size:11px;border:1px solid #bbb;border-radius:4px;background:#f3f3f3;color:#444;cursor:pointer}
+#ex-filter-menu{position:absolute;z-index:1200;display:none;min-width:160px;background:#fff;border:1px solid #ccc;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.12);padding:6px 8px;font-size:12px}
+#ex-filter-menu.open{display:block}
+#ex-filter-menu label{display:flex;gap:6px;align-items:center;padding:2px 0;white-space:nowrap}
+.hide-ex-en .ex-en{display:none !important}
+.hide-ex-ipa .ex-ipa{display:none !important}
+.hide-trans .trans-ru,.hide-trans .trans-kk,.hide-trans .trans-def{display:none !important}
+#empty-state{display:none;text-align:center;padding:56px 20px;color:#888;font-size:1.05em;line-height:1.7}
+#empty-state b{display:block;font-size:1.25em;color:#666;margin-bottom:8px}
+body.no-words #empty-state{display:block}
+body.dark #empty-state{color:#8a8aa8}
+body.dark #empty-state b{color:#c8c8e0}
+</style>
+<link rel="icon" href="data:,">
+<script src="en-head.js"></script>
 </head>
-<body>
-  <div class="page">
-    <header class="topbar">
-      <div>
-        <h1>English Base</h1>
-        <p class="subtitle">Word list coming soon • news channels live</p>
-      </div>
-      <div class="search-wrap">
-    <input id="search" type="text" placeholder="Search (placeholder, word list coming soon)" />
-        <button id="clearSearch" class="ghost">Clear</button>
-      </div>
-    </header>
+<body class="preload">
+<script src="en-body.js"></script>
 
-    <section class="stats" id="stats"></section>
-
-    <section class="filters">
-      <div class="filter-block">
-        <div class="filter-title">Levels</div>
-        <div class="filter-row" id="levelFilters"></div>
-      </div>
-      <div class="filter-block">
-        <div class="filter-title">POS</div>
-        <div class="filter-row" id="posFilters"></div>
-      </div>
-      <div class="filter-block">
-        <div class="filter-title">Display</div>
-        <div class="filter-row">
-          <button id="toggleRoman" class="chip active">Romanization</button>
-          <button id="toggleEnglish" class="chip active">English gloss</button>
-        </div>
-      </div>
-      <div class="filter-block">
-        <div class="filter-title">News</div>
-        <div class="filter-row news-controls">
-          <select id="newsChannel" class="news-select"></select>
-          <select id="newsQuality" class="news-select"></select>
-          <button id="watchNews" class="chip active">Watch</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Word</th>
-            <th class="col-roman">Romanization</th>
-            <th class="col-english">English</th>
-            <th>POS</th>
-            <th>Level</th>
-          </tr>
-        </thead>
-        <tbody id="wordTable"></tbody>
-      </table>
-    </section>
-  </div>
-
-  <div id="newsOverlay" class="overlay">
-    <div class="modal">
-      <button id="closeNews" class="close">×</button>
-      <h2>English News</h2>
-      <video id="newsPlayer" controls playsinline></video>
-      <p class="modal-note">If a stream does not play, try another channel or quality.</p>
+<div id="cdx-confirm">
+  <div id="cdx-confirm-box">
+    <p id="cdx-confirm-msg" data-i18n="confirm_title">Confirm this action</p>
+    <div class="cdx-conf-btns">
+      <button id="cdx-conf-cancel" data-i18n="cancel">Cancel</button>
+      <button class="cdx-conf-ok" id="cdx-conf-ok" data-i18n="confirm">Confirm</button>
     </div>
   </div>
+</div>
 
-  <script src="channels.js"></script>
-  <script src="app.js"></script>
-</body>
-</html>
+<div id="mobile-header">
+  <span class="mobile-title">English Base</span>
+  <input type="text" id="mobile-search-input" data-i18n-ph="search_ph" placeholder="Search..." autocomplete="off">
+  <button id="hamburger-btn" aria-label="Menu">☰</button>
+</div>
+<div id="mobile-overlay" onclick="document.getElementById('toolbar').classList.remove('mobile-open');this.style.display='none'"></div>
+
+<!-- =========================================================
+     TOOLBAR: search, stats, filters, and utilities
+     ========================================================= -->
+<div id="toolbar">
+<div id="tb-main">
+  <div id="tb-sections">
+    <div class="tb-section" id="tb-sec-1">
+      <div class="tb-row">
+        <div id="search-wrap">
+          <input type="text" id="search-input" data-i18n-ph="search_ph" placeholder="Search...">
+          <select id="search-lang">
+            <option value="wd">Word</option>
+            <option value="ipa">IPA</option>
+            <option value="ru">Russian</option>
+            <option value="kk">Kazakh</option>
+          </select>
+          <button id="search-clear">✕</button>
+        </div>
+        <button class="cdx-btn" id="btn-lang-toggle" title="Interface language">EN</button>
+      </div>
+      <div class="tb-row">
+        <div id="stats-bar">Familiar:&nbsp;<b id="st-fam">0</b>&nbsp;&nbsp;Learned:&nbsp;<b id="st-lrn">0</b>&nbsp;&nbsp;Total:&nbsp;<b>0</b></div>
+        <div id="mode-group">
+          <button class="mode-btn active" data-mode="light">☀️</button>
+          <button class="mode-btn" data-mode="dark">🌙</button>
+          <button class="mode-btn" data-mode="sepia">📜</button>
+        </div>
+        <button id="font-toggle">Aa ▾</button>
+      </div>
+      <div class="tb-row" id="cefr-stats-row">
+        <div id="cefr-stats-bar" style="font-size:.75em;color:#666;padding:0 6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap"></div>
+      </div>
+    </div>
+    <div class="tb-section" id="tb-sec-2">
+      <div class="tb-row">
+        <button id="btn-col-all" data-i18n="collapse">▼ Collapse</button>
+        <button id="btn-exp-all" data-i18n="expand">▶ Expand</button>
+        <span class="tb-sep"></span>
+        <label class="tb-label" id="lbl-speed" data-i18n="lbl_speed">▶ Speed:</label>
+        <select id="speed-sel" title="Playback speed">
+          <option value="0.5">0.5×</option>
+          <option value="0.75">0.75×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.25">1.25×</option>
+        </select>
+        <span class="tb-sep"></span>
+        <label class="tb-label" id="lbl-volume" data-i18n="lbl_volume">Volume:</label>
+        <input type="range" id="vol-range" min="0" max="100" step="5" value="100" title="Volume">
+        <span id="vol-val">100%</span>
+      </div>
+      <div class="tb-row">
+        <label class="tb-label" id="lbl-columns" data-i18n="lbl_columns">Columns:</label>
+        <button class="col-btn" data-col="num">#</button>
+        <button class="col-btn" data-col="word">Word</button>
+        <button class="col-btn" data-col="trans">Translation</button>
+        <button class="col-btn" data-col="ex">Example</button>
+        <button id="btn-show-all-cols" data-i18n="show_all_cols" data-i18n-title="show_all_cols_title">↺ All</button>
+        <span class="tb-sep"></span>
+        <button id="btn-roots-toggle">Show roots</button>
+      </div>
+      <div class="tb-row">
+        <button class="cdx-btn active" id="btn-tools-toggle">Tools ▾</button>
+      </div>
+      <div id="tb-tools" class="open">
+        <div class="tb-row">
+          <button class="cdx-btn" id="btn-save-snap" data-i18n="snap_save">Save snapshot</button>
+          <div class="cdx-wrap">
+            <button class="cdx-btn" id="btn-snap-dd" data-i18n="snap_dd">Snapshots ▾</button>
+            <div class="cdx-dropdown" id="snap-dropdown"></div>
+          </div>
+          <button class="cdx-btn" id="btn-reset-all" data-i18n="reset">↺ Reset</button>
+        </div>
+        <div class="tb-row">
+          <button id="btn-study" data-i18n="study" data-i18n-title="study_title" title="Flashcards">📚 Study</button>
+          <button id="btn-quiz" data-i18n="quiz" data-i18n-title="quiz_title" title="Multiple choice quiz">🧩 Quiz</button>
+          <div class="cdx-wrap">
+            <button class="cdx-btn" id="btn-palette-dd" data-i18n="palette">🎨 Palette ▾</button>
+            <div class="cdx-dropdown" id="palette-dropdown">
+              <div class="cdx-dropdown-item" data-pal="rose">🌹 Rose (default)</div>
+              <div class="cdx-dropdown-item" data-pal="ocean">🌊 Ocean</div>
+              <div class="cdx-dropdown-item" data-pal="forest">🌲 Forest</div>
+              <div class="cdx-dropdown-item" data-pal="ember">🔥 Ember</div>
+              <div class="cdx-dropdown-item" data-pal="plum">🍇 Plum</div>
+              <div class="cdx-dropdown-item" data-pal="slate">🪨 Slate</div>
+              <div class="cdx-dropdown-item" data-pal="citrus">🍊 Citrus</div>
+              <div class="cdx-dropdown-item" data-pal="coral">🪸 Coral</div>
+              <div class="cdx-dropdown-item" data-pal="midnight">🌌 Midnight</div>
+              <div class="cdx-dropdown-item" data-pal="jade">🪨 Jade</div>
+              <div class="cdx-dropdown-item" data-pal="sakura">🌸 Sakura</div>
+              <div class="cdx-dropdown-item" data-pal="gold">✨ Gold</div>
+              <div class="cdx-dropdown-item" data-pal="arctic">🧊 Arctic</div>
+              <div class="cdx-dropdown-item" data-pal="crimson">🔴 Crimson</div>
+              <div class="cdx-dropdown-item" data-pal="teal">🫧 Teal</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tb-section" id="tb-sec-3">
+      <div class="tb-row">
+        <button class="export-btn" id="btn-export-csv" data-i18n="export_csv" data-i18n-title="export_csv_title">⬇ Excel</button>
+      </div>
+      <div class="tb-row" id="tb-row-news">
+        <label class="tb-label" id="lbl-news" data-i18n="lbl_channels">Channels:</label>
+        <select id="news-type" title="Channel type">
+          <option value="tv">TV</option>
+          <option value="radio">Radio</option>
+        </select>
+        <select id="news-channel" title="News channel"></select>
+        <select id="news-quality" title="Stream quality"></select>
+        <button class="cdx-btn" id="btn-news-open" data-i18n="watch">Watch</button>
+        <button class="cdx-btn" id="btn-news-read" data-i18n="read" style="display:none">Read</button>
+      </div>
+      <div class="tb-row">
+        <label class="tb-label" id="lbl-sorting" data-i18n="lbl_sort">Sorting:</label>
+        <button class="sort-btn active" id="sort-default" data-i18n="sort_default">Default</button>
+        <button class="sort-btn" id="sort-word" data-i18n="sort_word">Word A–Z</button>
+        <button class="sort-btn" id="sort-root" data-i18n="sort_root">Root A–Z</button>
+        <button class="sort-btn" id="sort-affix" data-i18n="sort_affix">Affix A–Z</button>
+        <button class="sort-btn" id="sort-cefr-asc" data-i18n="sort_cefr_asc">CEFR A1–C2 ↑</button>
+        <button class="sort-btn" id="sort-cefr-desc" data-i18n="sort_cefr_desc">CEFR C2–A1 ↓</button>
+        <label class="tb-label" style="margin-left:4px"><input type="checkbox" id="sort-respect-div"> By section</label>
+      </div>
+      <div class="tb-row" id="tb-row-cefr">
+        <label class="tb-label" data-i18n="lbl_cefr">CEFR level:</label>
+        <button class="cefr-btn active" data-cefr="all">All</button>
+        <button class="cefr-btn" data-cefr="a1">A1</button>
+        <button class="cefr-btn" data-cefr="a2">A2</button>
+        <button class="cefr-btn" data-cefr="b1">B1</button>
+        <button class="cefr-btn" data-cefr="b2">B2</button>
+        <button class="cefr-btn" data-cefr="c1">C1</button>
+        <button class="cefr-btn" data-cefr="c2">C2</button>
+        <span id="word-count-wrap" style="margin-left:10px;font-size:.82em;color:#555;align-self:center;white-space:nowrap">Words: <b id="count-val">—</b></span>
+      </div>
+      <div class="tb-row" id="tb-row-texts">
+        <label class="tb-label" data-i18n="lbl_texts">Texts:</label>
+        <div id="text-btn-wrap">
+          <button class="text-btn" data-text="1">1</button><button class="text-btn" data-text="2">2</button><button class="text-btn" data-text="3">3</button><button class="text-btn" data-text="4">4</button><button class="text-btn" data-text="5">5</button><button class="text-btn" data-text="6">6</button><button class="text-btn" data-text="7">7</button><button class="text-btn" data-text="8">8</button><button class="text-btn" data-text="9">9</button><button class="text-btn" data-text="10">10</button><button class="text-btn" data-text="11">11</button><button class="text-btn" data-text="12">12</button><button class="text-btn" data-text="13">13</button><button class="text-btn" data-text="14">14</button><button class="text-btn" data-text="15">15</button><button class="text-btn" data-text="16">16</button><button class="text-btn" data-text="17">17</button><button class="text-btn" data-text="18">18</button><button class="text-btn" data-text="19">19</button><button class="text-btn" data-text="20">20</button><button class="text-btn" data-text="21">21</button><button class="text-btn" data-text="22">22</button><button class="text-btn" data-text="23">23</button><button class="text-btn" data-text="24">24</button><button class="text-btn" data-text="25">25</button><button class="text-btn" data-text="26">26</button><button class="text-btn" data-text="27">27</button><button class="text-btn" data-text="28">28</button><button class="text-btn" data-text="29">29</button><button class="text-btn" data-text="30">30</button><button class="text-btn" data-text="31">31</button><button class="text-btn" data-text="32">32</button><button class="text-btn" data-text="33">33</button><button class="text-btn" data-text="34">34</button><button class="text-btn" data-text="35">35</button><button class="text-btn" data-text="36">36</button><button class="text-btn" data-text="37">37</button><button class="text-btn" data-text="38">38</button><button class="text-btn" data-text="39">39</button><button class="text-btn" data-text="40">40</button>
+        </div>
+      </div>
+      <div class="tb-row" id="tb-row-pos">
+        <label class="tb-label" id="pos-filter-label" data-i18n="lbl_pos">Part of speech:</label>
+        <button class="pos-btn active" data-pos="all" id="pos-btn-all">All</button>
+        <button class="pos-btn" data-pos="pos_noun">Nouns</button>
+        <button class="pos-btn" data-pos="pos_verb">Verbs</button>
+        <button class="pos-btn" data-pos="pos_adj">Adj.</button>
+        <button class="pos-btn" data-pos="pos_adv">Adv.</button>
+        <button class="pos-btn" data-pos="pos_det">Det.</button>
+        <button class="pos-btn" data-pos="pos_interj">Interj.</button>
+        <button class="pos-btn" data-pos="pos_conj">Conj.</button>
+        <button class="pos-btn" data-pos="pos_prep">Prep.</button>
+        <button class="pos-btn" data-pos="pos_pron">Pron.</button>
+      </div>
+      <div class="tb-row" id="tb-row-alpha">
+        <label class="tb-label" id="alpha-filter-label" data-i18n="lbl_alpha">A–Z:</label>
+        <!-- One panel per locale. Adding a language means adding a wrap whose
+             id matches alpha-<code>-wrap; setLang shows the matching one. -->
+        <div id="alpha-en-wrap" style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">
+          <button class="alpha-btn active" data-alpha="all">All</button>
+          <button class="alpha-btn" data-alpha="A">A</button><button class="alpha-btn" data-alpha="B">B</button><button class="alpha-btn" data-alpha="C">C</button><button class="alpha-btn" data-alpha="D">D</button><button class="alpha-btn" data-alpha="E">E</button><button class="alpha-btn" data-alpha="F">F</button><button class="alpha-btn" data-alpha="G">G</button><button class="alpha-btn" data-alpha="H">H</button><button class="alpha-btn" data-alpha="I">I</button><button class="alpha-btn" data-alpha="J">J</button><button class="alpha-btn" data-alpha="K">K</button><button class="alpha-btn" data-alpha="L">L</button><button class="alpha-btn" data-alpha="M">M</button><button class="alpha-btn" data-alpha="N">N</button><button class="alpha-btn" data-alpha="O">O</button><button class="alpha-btn" data-alpha="P">P</button><button class="alpha-btn" data-alpha="Q">Q</button><button class="alpha-btn" data-alpha="R">R</button><button class="alpha-btn" data-alpha="S">S</button><button class="alpha-btn" data-alpha="T">T</button><button class="alpha-btn" data-alpha="U">U</button><button class="alpha-btn" data-alpha="V">V</button><button class="alpha-btn" data-alpha="W">W</button><button class="alpha-btn" data-alpha="X">X</button><button class="alpha-btn" data-alpha="Y">Y</button><button class="alpha-btn" data-alpha="Z">Z</button>
+        </div>
+        <div id="alpha-ru-wrap" style="display:none;flex-wrap:wrap;gap:2px;align-items:center">
+          <button class="alpha-btn active" data-alpha="all">Все</button>
+          <button class="alpha-btn" data-alpha="А">А</button><button class="alpha-btn" data-alpha="Б">Б</button><button class="alpha-btn" data-alpha="В">В</button><button class="alpha-btn" data-alpha="Г">Г</button><button class="alpha-btn" data-alpha="Д">Д</button><button class="alpha-btn" data-alpha="Е">Е</button><button class="alpha-btn" data-alpha="Ё">Ё</button><button class="alpha-btn" data-alpha="Ж">Ж</button><button class="alpha-btn" data-alpha="З">З</button><button class="alpha-btn" data-alpha="И">И</button><button class="alpha-btn" data-alpha="Й">Й</button><button class="alpha-btn" data-alpha="К">К</button><button class="alpha-btn" data-alpha="Л">Л</button><button class="alpha-btn" data-alpha="М">М</button><button class="alpha-btn" data-alpha="Н">Н</button><button class="alpha-btn" data-alpha="О">О</button><button class="alpha-btn" data-alpha="П">П</button><button class="alpha-btn" data-alpha="Р">Р</button><button class="alpha-btn" data-alpha="С">С</button><button class="alpha-btn" data-alpha="Т">Т</button><button class="alpha-btn" data-alpha="У">У</button><button class="alpha-btn" data-alpha="Ф">Ф</button><button class="alpha-btn" data-alpha="Х">Х</button><button class="alpha-btn" data-alpha="Ц">Ц</button><button class="alpha-btn" data-alpha="Ч">Ч</button><button class="alpha-btn" data-alpha="Ш">Ш</button><button class="alpha-btn" data-alpha="Щ">Щ</button><button class="alpha-btn" data-alpha="Ы">Ы</button><button class="alpha-btn" data-alpha="Э">Э</button><button class="alpha-btn" data-alpha="Ю">Ю</button><button class="alpha-btn" data-alpha="Я">Я</button>
+        </div>
+        <div id="alpha-kk-wrap" style="display:none;flex-wrap:wrap;gap:2px;align-items:center">
+          <button class="alpha-btn active" data-alpha="all">Барлығы</button>
+          <button class="alpha-btn" data-alpha="А">А</button><button class="alpha-btn" data-alpha="Ә">Ә</button><button class="alpha-btn" data-alpha="Б">Б</button><button class="alpha-btn" data-alpha="В">В</button><button class="alpha-btn" data-alpha="Г">Г</button><button class="alpha-btn" data-alpha="Ғ">Ғ</button><button class="alpha-btn" data-alpha="Д">Д</button><button class="alpha-btn" data-alpha="Е">Е</button><button class="alpha-btn" data-alpha="Ё">Ё</button><button class="alpha-btn" data-alpha="Ж">Ж</button><button class="alpha-btn" data-alpha="З">З</button><button class="alpha-btn" data-alpha="И">И</button><button class="alpha-btn" data-alpha="Й">Й</button><button class="alpha-btn" data-alpha="К">К</button><button class="alpha-btn" data-alpha="Қ">Қ</button><button class="alpha-btn" data-alpha="Л">Л</button><button class="alpha-btn" data-alpha="М">М</button><button class="alpha-btn" data-alpha="Н">Н</button><button class="alpha-btn" data-alpha="Ң">Ң</button><button class="alpha-btn" data-alpha="О">О</button><button class="alpha-btn" data-alpha="Ө">Ө</button><button class="alpha-btn" data-alpha="П">П</button><button class="alpha-btn" data-alpha="Р">Р</button><button class="alpha-btn" data-alpha="С">С</button><button class="alpha-btn" data-alpha="Т">Т</button><button class="alpha-btn" data-alpha="У">У</button><button class="alpha-btn" data-alpha="Ұ">Ұ</button><button class="alpha-btn" data-alpha="Ү">Ү</button><button class="alpha-btn" data-alpha="Ф">Ф</button><button class="alpha-btn" data-alpha="Х">Х</button><button class="alpha-btn" data-alpha="Һ">Һ</button><button class="alpha-btn" data-alpha="Ц">Ц</button><button class="alpha-btn" data-alpha="Ч">Ч</button><button class="alpha-btn" data-alpha="Ш">Ш</button><button class="alpha-btn" data-alpha="Щ">Щ</button><button class="alpha-btn" data-alpha="Ы">Ы</button><button class="alpha-btn" data-alpha="І">І</button><button class="alpha-btn" data-alpha="Э">Э</button><button class="alpha-btn" data-alpha="Ю">Ю</button><button class="alpha-btn" data-alpha="Я">Я</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="font-panel">
+  <div class="fr">
+    <label id="font-word-label" data-i18n="font_word">Word:</label>
+    <select id="font-word">
+      <option value="">Default</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Arial">Arial</option>
+      <option value="'Times New Roman'">Times New Roman</option>
+      <option value="Verdana">Verdana</option>
+      <option value="'Trebuchet MS'">Trebuchet MS</option>
+      <option value="Palatino">Palatino</option>
+      <option value="Cambria">Cambria</option>
+    </select>
+    <input type="range" id="size-word" min="14" max="42" step="1" value="26">
+    <span class="sv" id="sv-word">26px</span>
+  </div>
+  <div class="fr">
+    <label id="font-ipa-label" data-i18n="font_ipa">IPA:</label>
+    <select id="font-ipa">
+      <option value="">Default</option>
+      <option value="'Charis SIL'">Charis SIL</option>
+      <option value="'Doulos SIL'">Doulos SIL</option>
+      <option value="'Gentium Plus'">Gentium Plus</option>
+      <option value="'Lucida Sans Unicode'">Lucida Sans Unicode</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Arial">Arial</option>
+    </select>
+    <input type="range" id="size-ipa" min="9" max="20" step="1" value="13">
+    <span class="sv" id="sv-ipa">13px</span>
+  </div>
+  <div class="fr">
+    <label id="font-trans-label" data-i18n="font_trans">Translation:</label>
+    <select id="font-trans">
+      <option value="">Default</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Arial">Arial</option>
+      <option value="'Times New Roman'">Times New Roman</option>
+      <option value="Verdana">Verdana</option>
+      <option value="'Trebuchet MS'">Trebuchet MS</option>
+      <option value="Palatino">Palatino</option>
+      <option value="Cambria">Cambria</option>
+    </select>
+    <input type="range" id="size-trans" min="9" max="20" step="1" value="14">
+    <span class="sv" id="sv-trans">14px</span>
+  </div>
+</div>
+
+<div id="quiz-overlay" style="display:none">
+  <div id="quiz-card">
+    <div id="quiz-setup">
+      <div class="quiz-setup-head">
+        <div class="quiz-setup-title" id="quiz-setup-title" data-i18n="quiz_setup_title">Quiz — settings</div>
+        <button id="quiz-setup-close" data-i18n-title="close" title="Close">✕</button>
+      </div>
+      <div class="quiz-setup-row">
+        <span class="quiz-setup-label" id="quiz-levels-label" data-i18n="quiz_levels_label">CEFR levels:</span>
+        <div id="quiz-levels">
+          <button class="quiz-level-btn active" data-level="all" data-i18n="all">All</button>
+          <button class="quiz-level-btn" data-level="a1">A1</button>
+          <button class="quiz-level-btn" data-level="a2">A2</button>
+          <button class="quiz-level-btn" data-level="b1">B1</button>
+          <button class="quiz-level-btn" data-level="b2">B2</button>
+          <button class="quiz-level-btn" data-level="c1">C1</button>
+          <button class="quiz-level-btn" data-level="c2">C2</button>
+        </div>
+      </div>
+      <div class="quiz-setup-row">
+        <span class="quiz-setup-label" id="quiz-size-label" data-i18n="quiz_size_label">Number of questions:</span>
+        <input type="number" id="quiz-size" value="50" min="5" max="200">
+      </div>
+      <div class="quiz-setup-row">
+        <label class="quiz-setup-toggle"><input type="checkbox" id="quiz-hide-ipa"> <span data-i18n="quiz_hide_ipa">Hide IPA</span></label>
+      </div>
+      <div class="quiz-setup-actions">
+        <button id="quiz-start" data-i18n="quiz_start">Start</button>
+        <button id="quiz-exit" data-i18n="close">Close</button>
+      </div>
+    </div>
+
+    <div id="quiz-main" style="display:none">
+      <div id="quiz-header">
+        <div id="quiz-progress">
+          <span id="quiz-progress-label" data-i18n="quiz_question">Question</span> <span id="quiz-pos">1</span>/<span id="quiz-total">10</span>
+          &nbsp;|&nbsp; <span id="quiz-score-label" data-i18n="quiz_score">Score</span>: <span id="quiz-score">0</span>
+        </div>
+        <div id="quiz-header-actions">
+          <button id="quiz-toggle-ipa" type="button">IPA: hide</button>
+          <button id="quiz-close">✕</button>
+        </div>
+      </div>
+      <div id="quiz-question">
+        <div id="quiz-wd"></div>
+        <div id="quiz-ipa" style="font-size:1.2em;color:#555;margin-top:4px"></div>
+      </div>
+      <div id="quiz-choices"></div>
+      <div id="quiz-feedback" style="display:none;text-align:left;font-size:1.05em;padding:4px 0"></div>
+      <div id="quiz-actions" style="display:none">
+        <button id="quiz-know" data-i18n="study_know">Know</button>
+        <button id="quiz-learning" data-i18n="study_learning">Learning</button>
+        <button id="quiz-dont" data-i18n="study_unknown">Don't know</button>
+        <button id="quiz-next" data-i18n="quiz_next" disabled>Next</button>
+      </div>
+      <div id="quiz-summary" style="display:none;text-align:center">
+        <h2 data-i18n="quiz_done">Quiz complete!</h2>
+        <p id="quiz-summary-text"></p>
+        <button id="quiz-again" data-i18n="quiz_again">Again</button>
+        <button id="quiz-close2" data-i18n="close">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="study-overlay" style="display:none">
+  <div id="study-card">
+    <div id="study-progress">
+      <span id="study-pos">0</span> / <span id="study-total">0</span>
+      &nbsp;|&nbsp; ✓ <span id="study-known">0</span>
+      &nbsp;|&nbsp; ? <span id="study-learning">0</span>
+      &nbsp;|&nbsp; ✗ <span id="study-unknown">0</span>
+      <button id="study-close" data-i18n-title="close" title="Close">✕</button>
+    </div>
+    <div id="study-prog-bar-wrap" style="width:100%;height:4px;background:#eee;border-radius:2px;overflow:hidden">
+      <div id="study-prog-bar" style="height:100%;background:#e94560;width:0%;transition:width .3s"></div>
+    </div>
+    <div id="study-front">
+      <div id="study-wd"></div>
+    </div>
+    <div id="study-back" style="display:none">
+      <div id="study-ipa"></div>
+      <div id="study-trans"></div>
+      <div id="study-ex"></div>
+    </div>
+    <div id="study-buttons">
+      <button id="study-show" data-i18n="study_show">Show answer</button>
+      <button id="study-know" data-i18n="study_know" style="display:none">Know</button>
+      <button id="study-learning" data-i18n="study_learning" style="display:none">Learning</button>
+      <button id="study-dont" data-i18n="study_unknown" style="display:none">Don't know</button>
+    </div>
+    <div id="study-summary" style="display:none">
+      <h2 data-i18n="study_done">Session complete!</h2>
+      <p id="study-summary-text"></p>
+      <button id="study-again" data-i18n="study_again">Repeat</button>
+      <button id="study-close2" data-i18n="close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="news-overlay" style="display:none">
+  <div id="news-card">
+    <div id="news-header">
+      <span id="news-title">English News</span>
+      <div id="news-actions">
+        <div id="news-tools">
+          <button id="news-cc" class="news-tool" title="Captions">CC</button>
+          <button id="news-py" class="news-tool" title="IPA">IPA</button>
+          <button id="news-tr" class="news-tool" title="Translation">TR</button>
+        </div>
+        <div id="news-volume-wrap" title="Volume">
+          <span id="news-vol-label">Vol</span>
+          <input id="news-volume" type="range" min="0" max="100" step="5" value="100">
+          <span id="news-vol-val">100%</span>
+        </div>
+        <button id="news-close" data-i18n-title="close" title="Close">✕</button>
+      </div>
+    </div>
+    <div id="news-player-wrap">
+      <video id="news-player" controls playsinline preload="none"></video>
+      <audio id="news-audio" controls preload="none"></audio>
+      <div id="news-captions" class="hidden">
+        <div class="cap-en"></div>
+      </div>
+    </div>
+    <div id="news-under">
+      <button id="news-prev" class="news-nav-btn" title="Previous channel">‹</button>
+      <div id="news-subtitles">
+        <div class="cap-ipa"></div>
+        <div class="cap-tr"></div>
+      </div>
+      <button id="news-next" class="news-nav-btn" title="Next channel">›</button>
+    </div>
+  </div>
+</div>
+
+<div id="news-read-overlay" style="display:none">
+  <div id="news-read-card">
+    <div id="news-read-header">
+      <span id="news-read-title">News Reader</span>
+      <div id="news-read-actions">
+        <button id="news-read-py" class="news-tool active" title="IPA">IPA</button>
+        <button id="news-read-tr" class="news-tool active" title="Translation">TR</button>
+        <button id="news-read-audio" class="news-tool" title="Play audio">Play</button>
+        <button id="news-read-close" data-i18n-title="close" title="Close">✕</button>
+      </div>
+    </div>
+    <div id="news-read-body">
+      <div id="news-read-side">
+        <div class="news-read-label" data-i18n="news_channel">Channel</div>
+        <select id="news-read-channel"></select>
+        <div class="news-read-label" data-i18n="news_articles">Articles</div>
+        <div id="news-read-articles"></div>
+      </div>
+      <div id="news-read-content">
+        <h3 id="news-read-article-title"></h3>
+        <div id="news-read-lines"></div>
+      </div>
+    </div>
+    <div id="news-read-status"></div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Title
+     ========================================================= -->
+<div class="title-row">
+  <div class="title-text">
+    <h1>English Base</h1>
+    <div class="subtitle" id="title-subtitle">0 words &nbsp;·&nbsp; Grouped by part of speech</div>
+  </div>
+</div>
+
+<!-- =========================================================
+     Contents / TOC (jump to POS sections) — filled by render-words.js
+     ========================================================= -->
+<div class="toc" style="display:none"><h3>Contents</h3></div>
+
+<div id="filtered-view" style="display:none"></div>
+
+<div id="fam-section" style="display:none">
+<h2>Familiar, not yet learned</h2>
+<table id="fam-table">
+<thead><tr><th data-col="cb" class="cb-col">&#10004;</th><th data-col="fam" class="fam-col" title="Familiar / to review">?</th><th data-col="num" style="width:3%">#</th><th data-col="word" style="width:22%">Word</th><th data-col="trans" style="width:30%">Translation</th><th data-col="ex" style="width:45%">Example</th></tr></thead>
+<tbody id="fam-tbody"></tbody>
+</table>
+</div>
+
+<div id="learned-section" style="display:none">
+<h2>Learned</h2>
+<table id="learned-table">
+<thead><tr><th data-col="cb" class="cb-col">&#10004;</th><th data-col="fam" class="fam-col" title="Familiar / to review">?</th><th data-col="num" style="width:3%">#</th><th data-col="word" style="width:22%">Word</th><th data-col="trans" style="width:30%">Translation</th><th data-col="ex" style="width:45%">Example</th></tr></thead>
+<tbody id="learned-tbody"></tbody>
+</table>
+</div>
+
+<!-- Word tables are built here by js/render-words.js from data/words-data.js -->
+<div id="word-tables-mount"></div>
+
+<div id="empty-state">
+  <b>No vocabulary loaded yet</b>
+  The interface is complete and every control is live.<br>
+  Word data goes in <code>data/words-data.js</code>.
+</div>
+
+<script src="i18n.js"></script>
+<script src="channels.js"></script>
+<script src="news_data.js"></script>
+<script src="data/words-data.js"></script>
+<script src="js/render-words.js"></script>
+<script src="en.js"></script>
+<script src="text-topics.js"></script>
+<script>
+(function(){
+  function isRowVisible(tr){
+    return !tr.classList.contains('cefr-hide') &&
+           !tr.classList.contains('pos-hide') &&
+           !tr.classList.contains('alpha-hide') &&
+           !tr.classList.contains('sr-hide') &&
+           !tr.classList.contains('text-hide');
+  }
+  function updateTextLayout(){
+    var n = 0;
+    document.querySelectorAll('tbody[id]:not(#learned-tbody):not(#fam-tbody)').forEach(function(tb){
+      Array.prototype.forEach.call(tb.rows, function(tr){
+        if(!isRowVisible(tr)) return;
+        var c = tr.querySelector('.rownum');
+        if(c) c.textContent = ++n;
+      });
+    });
+    var el = document.getElementById('count-val');
+    if(el) el.textContent = n;
+
+    document.querySelectorAll('h3.root-group').forEach(function(h3){
+      var next = h3.nextElementSibling;
+      var wrap = (next && next.classList && next.classList.contains('grp-wrap')) ? next : null;
+      var tbl = wrap ? wrap.querySelector('table') : (next && next.tagName === 'TABLE' ? next : null);
+      var hasRows = false;
+      if(tbl){
+        for(var i=0;i<tbl.rows.length;i++){ if(isRowVisible(tbl.rows[i])) { hasRows = true; break; } }
+      }
+      h3.classList.toggle('grp-empty', !hasRows);
+      if(wrap) wrap.classList.toggle('grp-empty', !hasRows);
+      else if(tbl) tbl.classList.toggle('grp-empty', !hasRows);
+    });
+    document.querySelectorAll('h2.pos-group').forEach(function(h2){
+      var el = h2.nextElementSibling;
+      var hasRows = false;
+      while(el && el.tagName !== 'H2'){
+        var tbl = null;
+        if(el.classList && el.classList.contains('grp-wrap')) tbl = el.querySelector('table');
+        else if(el.tagName === 'TABLE') tbl = el;
+        if(tbl){
+          for(var i=0;i<tbl.rows.length;i++){ if(isRowVisible(tbl.rows[i])) { hasRows = true; break; } }
+          if(hasRows) break;
+        }
+        el = el.nextElementSibling;
+      }
+      h2.classList.toggle('pos-empty', !hasRows);
+    });
+
+    var lS = document.getElementById('learned-section');
+    var fS = document.getElementById('fam-section');
+    var lT = document.getElementById('learned-tbody');
+    var fT = document.getElementById('fam-tbody');
+    function sectionHasVisible(tb){
+      if(!tb) return false;
+      for(var i=0;i<tb.rows.length;i++){ if(isRowVisible(tb.rows[i])) return true; }
+      return false;
+    }
+    if(lS && lT) lS.style.display = sectionHasVisible(lT) ? 'block' : 'none';
+    if(fS && fT) fS.style.display = sectionHasVisible(fT) ? 'block' : 'none';
+  }
+  function applyTextFilter(selected){
+    var active = selected.size > 0;
+    window._textFilterActive = active;
+    window._textFilterSelected = Array.from(selected);
+    var _rows = (window._allRows && window._allRows.length) ? window._allRows : document.querySelectorAll('tbody[id] tr');
+    if(!active){
+      _rows.forEach(function(tr){
+        tr.classList.remove('text-hide');
+      });
+      document.querySelectorAll('.text-btn').forEach(function(btn){ btn.classList.remove('active'); });
+      if(typeof rebuildView === 'function'){ rebuildView(); updateTextLayout(); }
+      else updateTextLayout();
+      return;
+    }
+    _rows.forEach(function(tr){
+      var t = tr.getAttribute('data-text');
+      var hide = (!t || !selected.has(t));
+      tr.classList.toggle('text-hide', hide);
+    });
+    if(typeof rebuildView === 'function'){ rebuildView(); updateTextLayout(); }
+    else updateTextLayout();
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    /* Show the empty-state notice only when there is genuinely nothing to show */
+    if(!document.querySelector('#word-tables-mount tr[data-key]')){
+      document.body.classList.add('no-words');
+    }
+
+    var mapWP = window.TEXT_TOPIC_BY_WP || {};
+    var mapW = window.TEXT_TOPIC_BY_WORD || {};
+    var names = window.TEXT_TOPIC_NAMES || {};
+    document.querySelectorAll('tbody[id] tr').forEach(function(tr){
+      var w = tr.getAttribute('data-key') || '';
+      var ipa = tr.getAttribute('data-ipa') || '';
+      var key = w + '|' + ipa;
+      var t = mapWP[key] || mapW[w];
+      if(!t) return;
+      tr.setAttribute('data-text', t);
+      var wc = tr.querySelector('.wordcell, td[data-col="word"]');
+      if(!wc) return;
+      if(!wc.querySelector('.text-indicator')){
+        if(getComputedStyle(wc).position === 'static') wc.style.position = 'relative';
+        var tag = document.createElement('span');
+        tag.className = 'text-indicator';
+        tag.textContent = t;
+        var tn = names[t] || '';
+        tag.title = tn ? ('Text ' + t + ': ' + tn) : ('Text ' + t);
+        wc.appendChild(tag);
+      }
+    });
+    document.body.addEventListener('mouseover', function(e){
+      var b = e.target.closest('.cefr-badge');
+      if(!b) return;
+      var lvl = (b.textContent || '').trim();
+      if(lvl && !b.title) b.title = 'CEFR level ' + lvl;
+    });
+    var exMenu = document.createElement('div');
+    exMenu.id = 'ex-filter-menu';
+    exMenu.innerHTML = ''
+      + '<label><input type="checkbox" data-ex="en" checked> Sentence</label>'
+      + '<label><input type="checkbox" data-ex="ipa" checked> IPA</label>'
+      + '<label><input type="checkbox" data-ex="tr" checked> Translation</label>';
+    document.body.appendChild(exMenu);
+    function applyExFilters(){
+      var cEn = exMenu.querySelector('input[data-ex="en"]');
+      var cIpa = exMenu.querySelector('input[data-ex="ipa"]');
+      var cTr = exMenu.querySelector('input[data-ex="tr"]');
+      document.body.classList.toggle('hide-ex-en', cEn && !cEn.checked);
+      document.body.classList.toggle('hide-ex-ipa', cIpa && !cIpa.checked);
+      document.body.classList.toggle('hide-trans', cTr && !cTr.checked);
+    }
+    exMenu.addEventListener('change', applyExFilters);
+    document.querySelectorAll('th[data-col="ex"]').forEach(function(th){
+      if(th.querySelector('.ex-filter-btn')) return;
+      if(getComputedStyle(th).position === 'static') th.style.position = 'relative';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ex-filter-btn';
+      btn.textContent = '▾';
+      btn.title = 'Example display';
+      th.appendChild(btn);
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var r = btn.getBoundingClientRect();
+        exMenu.style.top = (window.scrollY + r.bottom + 4) + 'px';
+        exMenu.style.left = (window.scrollX + r.left) + 'px';
+        exMenu.classList.toggle('open');
+      });
+    });
+    document.addEventListener('click', function(e){
+      if(!exMenu.contains(e.target)) exMenu.classList.remove('open');
+    });
+    applyExFilters();
+    var selected = new Set();
+    var wrap = document.getElementById('text-btn-wrap');
+    if(wrap){
+      wrap.querySelectorAll('.text-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var t = this.getAttribute('data-text');
+          if(selected.has(t)) selected.delete(t);
+          else selected.add(t);
+          this.classList.toggle('active', selected.has(t));
+          applyTextFilter(selected);
+        });
+      });
+    }
+    document.body.addEventListener('click', function(e){
+      if(e.target.closest('#tb-row-cefr') || e.target.closest('#tb-row-pos') || e.target.closest('#tb-row-alpha')){
+        setTimeout(function(){ applyTextFilter(selected); }, 0);
+      }
+    });
+    var searchInput = document.getElementById('search-input');
+    var searchLang = document.getElementById('search-lang');
+    var searchClear = document.getElementById('search-clear');
+    if(searchInput) searchInput.addEventListener('input', function(){ setTimeout(function(){ applyTextFilter(selected); }, 0); });
+    if(searchLang) searchLang.addEventListener('change', function(){ setTimeout(function(){ applyTextFilter(selected); }, 0); });
+    if(searchClear) searchClear.addEventListener('click', function(){ setTimeout(function(){ applyTextFilter(selected); }, 0); });
+    applyTextFilter(selected);
+  });
+})();
+</script>
+<script src="xlsx.full.min.js" defer></script>
+<div class="donate-bar">
+  <a href="https://www.paypal.me/SultanKulbassov" target="_blank" rel="noopener" class="donate-btn">
+    ❤️ Donate to the creator
+  </a>
+  <span class="donate-info">lemarshel@gmail.com · PayPal: paypal.me/SultanKulbassov</span>
+</div>
+<button id="back-to-top" title="Back to top" aria-label="Back to top">↑</button>
+</body></html>

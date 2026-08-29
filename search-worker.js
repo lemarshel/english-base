@@ -1,49 +1,35 @@
-/* HSK Base — search worker (off-main-thread filtering) */
+/* English Base — search worker (off-main-thread filtering) */
 var _rows = [];
 
-function stripTones(s){
+function stripDiacritics(s){
   try{
-    return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
   }catch(e){
     return String(s||'').toLowerCase();
   }
 }
 
 function prepRow(r){
-  var zh = String(r.zh || '').trim();
-  var py = String(r.py || '').trim();
-  var en = String(r.en || '').trim();
-  var ru = String(r.ru || '').trim();
   return {
-    zh: zh.toLowerCase(),
-    py: stripTones(py),
-    en: en.toLowerCase(),
-    ru: ru.toLowerCase()
+    wd:  String(r.wd  || '').trim().toLowerCase(),
+    ipa: stripDiacritics(String(r.ipa || '').trim()),
+    ru:  String(r.ru  || '').trim().toLowerCase(),
+    kk:  String(r.kk  || '').trim().toLowerCase(),
+    def: String(r.def || '').trim().toLowerCase()
   };
 }
 
 function doSearch(query, lang){
   var q = String(query || '').trim();
   if(!q) return [];
-  var qn = (lang === 'py') ? stripTones(q) : q.toLowerCase();
+  var qn = (lang === 'ipa') ? stripDiacritics(q) : q.toLowerCase();
+  var field = (lang === 'wd' || lang === 'ipa' || lang === 'ru' || lang === 'kk' || lang === 'def')
+    ? lang : 'def';
   var out = [];
   for(var i=0;i<_rows.length;i++){
     var r = _rows[i];
     if(!r) continue;
-    if(lang === 'zh'){
-      if(r.zh.indexOf(qn) !== -1) out.push(i);
-      continue;
-    }
-    if(lang === 'py'){
-      if(r.py.indexOf(qn) !== -1) out.push(i);
-      continue;
-    }
-    if(lang === 'en'){
-      if(r.en.indexOf(qn) !== -1) out.push(i);
-      continue;
-    }
-    // default RU
-    if(r.ru.indexOf(qn) !== -1) out.push(i);
+    if(r[field].indexOf(qn) !== -1) out.push(i);
   }
   return out;
 }

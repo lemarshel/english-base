@@ -148,7 +148,7 @@ body.dark .quiz-choice:hover{border-color:#e94560}
 
 #quiz-toggle-py{padding:4px 8px;border:1px solid #ccc;border-radius:6px;background:#f5f5f5;font-size:.78em;cursor:pointer}
 #quiz-toggle-py:hover{background:#e94560;color:#fff;border-color:#e94560}
-#quiz-card.quiz-hide-py #quiz-ipa{display:none}
+#quiz-card.quiz-hide-ipa #quiz-ipa{display:none}
 #quiz-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 #quiz-know{padding:10px 22px;background:#27ae60;color:#fff;border:none;border-radius:8px;font-size:1em;cursor:pointer}
 #quiz-learning{padding:10px 22px;background:#f1c40f;color:#4d3b00;border:none;border-radius:8px;font-size:1em;cursor:pointer}
@@ -465,8 +465,10 @@ body.dark h1 { color: #fff !important; text-shadow: 0 0 20px rgba(233,69,96,0.5)
 .loc-ru .ex-trans-ru { display: block; }
 .loc-kk .ex-trans-kk { display: block; }
 
-/* Hide the wrapper when the active locale has nothing to show. */
-.ex-trans:not(:has(.ex-trans-def)) { display: none; }
+/* Hide the wrapper when the active locale has nothing to show. The first
+   rule must exclude the other locales, or it hides their translations too.
+   One line per locale — add another when adding a language. */
+body:not(.loc-ru):not(.loc-kk) .ex-trans:not(:has(.ex-trans-def)) { display: none; }
 body.loc-ru .ex-trans:not(:has(.ex-trans-ru)) { display: none; }
 body.loc-kk .ex-trans:not(:has(.ex-trans-kk)) { display: none; }
 .ex-trans { font-size: .82em; color: #777; margin-top: 3px; }

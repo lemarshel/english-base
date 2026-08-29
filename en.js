@@ -28,8 +28,33 @@ function alphaAttr(){
   var c = localeCode();
   return c === 'kk' ? 'data-kk' : c === 'ru' ? 'data-ru' : 'data-key';
 }
+/* Count-aware word label. English needs a singular, Russian needs three
+   forms, Kazakh takes no plural agreement after a numeral — so a locale that
+   omits words_one/words_few falls back to its own plural, never to English. */
+function wordsLabel(n){
+  var I = window.I18N || {};
+  var L = I[localeCode()] || I.en || {};
+  var base = L.words != null ? L.words : (((I.en || {}).words) || 'words');
+  var m10 = n % 10, m100 = n % 100;
+  if(n === 1 || (m10 === 1 && m100 !== 11)){
+    return L.words_one != null ? L.words_one : base;
+  }
+  if(m10 >= 2 && m10 <= 4 && !(m100 >= 12 && m100 <= 14)){
+    return L.words_few != null ? L.words_few : base;
+  }
+  return base;
+}
+/* CEFR level model — file scope, because both module scopes below sort and
+   filter on it. */
+var CEFR_LEVELS = ['a1','a2','b1','b2','c1','c2'];
+var CEFR_ORDER  = {a1:1, a2:2, b1:3, b2:4, c1:5, c2:6};
+var CEFR_COLORS = {a1:'#27ae60', a2:'#2ecc71', b1:'#f39c12',
+                   b2:'#e67e22', c1:'#e74c3c', c2:'#8e44ad'};
+function cefrOf(tr){ return (tr.getAttribute('data-cefr')||'').toLowerCase(); }
+
 window.localeCode = localeCode;
 window.T = T;
+window.wordsLabel = wordsLabel;
 
 (function(){
 /* ==========================================================================
@@ -185,11 +210,6 @@ document.addEventListener('DOMContentLoaded', markStress);
 window.markStress = markStress;
 
 /* CEFR level badge in word cells */
-var CEFR_LEVELS = ['a1','a2','b1','b2','c1','c2'];
-var CEFR_ORDER  = {a1:1, a2:2, b1:3, b2:4, c1:5, c2:6};
-var CEFR_COLORS = {a1:'#27ae60', a2:'#2ecc71', b1:'#f39c12',
-                   b2:'#e67e22', c1:'#e74c3c', c2:'#8e44ad'};
-function cefrOf(tr){ return (tr.getAttribute('data-cefr')||'').toLowerCase(); }
 document.addEventListener('DOMContentLoaded', function(){
   document.querySelectorAll('tbody[id]:not(#learned-tbody):not(#fam-tbody) tr').forEach(function(tr){
     var lvl = cefrOf(tr);
@@ -452,6 +472,11 @@ function speakEn(text){
     setTimeout(function(){ speechSynthesis.speak(u); }, 0);
   });
 }
+/* The study and quiz overlays live in the second module scope below, so the
+   audio entry points have to cross the boundary explicitly. */
+window.speakEn = speakEn;
+window.stopAllAudio = stopAllAudio;
+
 document.body.addEventListener('click',function(e){
   var btn=e.target.closest('.tts-btn');if(!btn)return;
   e.stopPropagation();
@@ -794,6 +819,9 @@ window._cdxOrigOrder = {};
 /* ── Original row order (use pre-drag capture from window._cdxOrigOrder) */
 var _origOrder = window._cdxOrigOrder || {};
 
+/* Bridged from the first module scope. */
+var speakEn = window.speakEn, stopAllAudio = window.stopAllAudio;
+
 
 /* ── Palette ─────────────────────────────────────────────────────────── */
 
@@ -858,7 +886,10 @@ function setLang(code){
   if(code !== 'en') document.body.classList.add('loc-' + code);
   document.documentElement.setAttribute('lang', code);
 
-  var _wc = document.querySelectorAll('tr[data-key]').length;
+  /* Read the cached row list — lazy section rendering detaches offscreen
+     rows, so querying the DOM here would undercount. */
+  var _wc = (window._allRows && window._allRows.length)
+    || document.querySelectorAll('tr[data-key]').length;
 
   function txt(el, s){ if(el && s != null) el.textContent = s; }
   function ttl(el, s){ if(el && s != null){ el.title = s; el.setAttribute('aria-label', s); } }
@@ -882,7 +913,7 @@ function setLang(code){
   txt(document.querySelector('h1'), L.h1);
 
   var sub = document.querySelector('.subtitle');
-  if(sub) sub.innerHTML = _wc + ' ' + L.words + ' &nbsp;&middot;&nbsp; ' + L.grouped_by_pos;
+  if(sub) sub.innerHTML = _wc + ' ' + wordsLabel(_wc) + ' &nbsp;&middot;&nbsp; ' + L.grouped_by_pos;
 
   /* search language dropdown: labels, plus which translation option is offered */
   var _langSel = document.getElementById('search-lang');
@@ -927,7 +958,8 @@ function setLang(code){
     var span = a.querySelector('.toc-count');
     if(span){
       var m = span.textContent.match(/\d+/);
-      span.textContent = '(' + (m ? m[0] : '0') + ' ' + L.words + ')';
+      var cnt = m ? parseInt(m[0],10) : 0;
+      span.textContent = '(' + cnt + ' ' + wordsLabel(cnt) + ')';
     }
   });
 
@@ -1141,13 +1173,14 @@ function initSearchWorker(){
   var rows = _allRows;
   rows.forEach(function(tr, idx){ tr._sidx = idx; });
   var payload = rows.map(function(tr){
-    var zhEl = tr.querySelector('.wd');
-    var pyEl = tr.querySelector('.ipa');
+    var wdEl = tr.querySelector('.wd');
+    var ipaEl = tr.querySelector('.ipa');
     return {
-      zh: zhEl ? zhEl.textContent.trim() : '',
-      py: (tr.getAttribute('data-ipa') || (pyEl ? pyEl.textContent.trim() : '')),
-      en: tr.getAttribute('data-kk') || '',
-      ru: tr.getAttribute('data-ru') || ''
+      wd:  tr.getAttribute('data-key') || (wdEl ? wdEl.textContent.trim() : ''),
+      ipa: tr.getAttribute('data-ipa') || (ipaEl ? ipaEl.textContent.trim() : ''),
+      ru:  tr.getAttribute('data-ru')  || '',
+      kk:  tr.getAttribute('data-kk')  || '',
+      def: tr.getAttribute('data-def') || ''
     };
   });
   _searchWorker.postMessage({ type: 'init', rows: payload });
@@ -1644,6 +1677,9 @@ document.addEventListener('DOMContentLoaded', function(){
     if(hidden){ mergeGroups(); }
     else       { unmergeGroups(); }
 
+    /* Keep the body class in sync: setLang reads it to pick the button label,
+       and it would otherwise stay stuck at whatever the preloader set. */
+    document.body.classList.toggle('ph-hidden', hidden);
     btn.textContent = hidden ? T('show_roots','Show roots') : T('hide_roots','Hide roots');
     localStorage.setItem('ph_hidden', hidden ? '1' : '0');
     renumVisible();
@@ -2522,11 +2558,12 @@ function captureSnapshot(){
   if(fT) for(var i=0;i<fT.rows.length;i++){ var z=fT.rows[i].querySelector('.wd'); if(z) fam.push(z.textContent.trim()); }
   snap.learned = learned;
   snap.fam = fam;
-  snap.total = _wc;
+  snap.total = (window._allRows && window._allRows.length)
+    || document.querySelectorAll('tr[data-key]').length;
 
   // row orders
   var order = {};
-  _allTbodies.forEach(function(tb){
+  (window.getAllTbodies ? window.getAllTbodies() : []).forEach(function(tb){
     var ids=[];
     for(var i=0;i<tb.rows.length;i++){ var z=tb.rows[i].querySelector('.wd'); if(z) ids.push(z.textContent.trim()); }
     if(ids.length) order[tb.id]=ids;
@@ -2996,7 +3033,12 @@ function cdxConfirm(msg, onOk, okLabel, cancelLabel){
       for(var i=0;i<typeSel.options.length;i++){
         var opt = typeSel.options[i];
         if(opt.value === 'tv') opt.textContent = tvLabel;
-        if(opt.value === 'radio') opt.textContent = radioLabel;
+        if(opt.value === 'radio'){
+          opt.textContent = radioLabel;
+          /* no stations bundled yet — leave the option visible but inert
+             rather than silently falling back to the TV list */
+          opt.disabled = !(RADIO_CHANNELS && RADIO_CHANNELS.length);
+        }
       }
     }
 

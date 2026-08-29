@@ -132,3 +132,46 @@ verified in a browser, not assumed.
 - The RSS build pipeline (`news_build.py` equivalent)
 - Radio channel entries
 - Extracting a shared engine across both repos
+
+---
+
+## Implementation notes
+
+Written after the port was built and verified in a browser.
+
+### Bugs found during verification
+
+Four were inherited latent bugs in hsk-base, which has the same two-module-scope
+structure; the rest came from the port itself.
+
+| Bug | Cause | Fix |
+|---|---|---|
+| CEFR sorting silently did nothing | `CEFR_ORDER` declared in module scope 1, the sorter lives in scope 2 | hoisted the CEFR model to file scope |
+| Study and quiz audio threw | `speakEn` / `stopAllAudio` in scope 1, callers in scope 2 (inherited) | exported to `window`, aliased at the top of scope 2 |
+| Snapshots never saved | `captureSnapshot` referenced `_wc` and `_allTbodies`, neither in scope (inherited) | read the row cache and `window.getAllTbodies()` |
+| Counts read 0 after a locale switch | `setLang` counted `tr[data-key]` in the DOM, but lazy sections detach offscreen rows | count from `window._allRows` |
+| Example translations invisible in ru/kk | the `en` hide rule was not scoped to `en`, so it applied in every locale | guarded with `body:not(.loc-ru):not(.loc-kk)` |
+| Root toggle label wrong after a locale switch | the click handler wrote `ph_hidden` but never updated the `ph-hidden` body class that `setLang` reads | handler now syncs the class |
+| `1 words` in the table of contents | no singular form | added `words_one`, plus Russian's three-form rule in `wordsLabel()` |
+| Kazakh borrowed English's singular | `T()` falls back to `en`, which is wrong for plurals | `wordsLabel()` reads the active locale table only |
+
+### Verified in the browser
+
+Empty state and a seven-word sample both boot with no console errors. Exercised:
+all six sorts, CEFR and POS and alphabet and topic filters, search in all four
+modes through the worker, locale cycling across all three languages, learned and
+familiar tracking, snapshot save and restore, flashcards, quiz, column toggles,
+group collapse, root toggle, CSV export, the TV player, three themes, palette
+switching, and the mobile layout at 375px with no horizontal overflow.
+
+The sample data was removed after verification; `data/words-data.js` ships empty.
+
+### Deviations from the design above
+
+- POS slots became English parts of speech rather than direct renames:
+  `pos_mw` → `pos_det` (determiners) and `pos_particle` → `pos_interj`
+  (interjections). Still nine slots, so the toolbar row does not reflow.
+- `RADIO_CHANNELS` is defined but empty, and the Radio option renders disabled
+  rather than silently falling back to the TV list.
+- News-reader strings remain English and Russian only; other locales fall back
+  to English there. The rest of the interface is fully localized.
