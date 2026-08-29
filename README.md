@@ -36,7 +36,7 @@ The headword, its IPA, and the example sentence are always English.
 
 | Locale | Translation column | Alphabet filter |
 |---|---|---|
-| `en` | English definition (`def`) | A–Z over the headword |
+| `en` | English definition (`def`), falling back to Russian while empty | A–Z over the headword |
 | `ru` | Russian translation | А–Я (33 letters) |
 | `kk` | Kazakh translation | Ә–Я (42 letters) |
 

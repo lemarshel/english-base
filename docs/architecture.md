@@ -73,7 +73,7 @@ at file scope.
 | `ipa` | IPA, with `ˈ` / `ˌ` stress marks | `data-ipa`; search; stress highlighting |
 | `ru` | Russian translation | `data-ru`; shown in the `ru` locale; alpha filter |
 | `kk` | Kazakh translation | `data-kk`; shown in the `kk` locale; alpha filter |
-| `def` | English definition | `data-def`; shown in the `en` locale |
+| `def` | English definition | `data-def`; shown in the `en` locale, with Russian fallback while empty |
 | `pos` | `pos_noun` `pos_verb` `pos_adj` `pos_adv` `pos_det` `pos_interj` `pos_conj` `pos_prep` `pos_pron` | `data-section`; section headings |
 | `group` | id of an `EN_GROUPS` entry | which `<tbody>` the row lands in |
 | `root` | word root, e.g. `spect` | `data-root`; Root A–Z sort |

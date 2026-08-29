@@ -450,10 +450,14 @@ h1 { border-bottom-color: transparent !important; }
 /* Dark mode h1 fix */
 body.dark h1 { color: #fff !important; text-shadow: 0 0 20px rgba(233,69,96,0.5); }
 
-/* Locale switching — a bare body is the en locale, which shows the English
-   definition; loc-ru and loc-kk swap in their translation instead. */
+/* Locale switching — a bare body is the en locale. It shows the English
+   definition when present and otherwise falls back to Russian, so imported
+   translations are visible on first load. loc-ru and loc-kk explicitly select
+   their respective translation. */
 .trans-ru, .trans-kk { display: none; }
 .trans-def { display: inline; }
+body:not(.loc-ru):not(.loc-kk) .trans-def:empty { display: none; }
+body:not(.loc-ru):not(.loc-kk) .trans-cell:not(:has(.trans-def:not(:empty))) .trans-ru:not(:empty) { display: inline; }
 .loc-ru .trans-def, .loc-kk .trans-def { display: none; }
 .loc-ru .trans-ru { display: inline; }
 .loc-kk .trans-kk { display: inline; }
@@ -906,6 +910,5 @@ body.sepia #tb-sections .tb-section{
 /* Quiz center align for zh/pinyin */
 #quiz-question{display:flex;flex-direction:column;align-items:center;text-align:center}
 #quiz-wd,#quiz-ipa{text-align:center}
-
 
 

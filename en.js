@@ -17,10 +17,13 @@ function T(key, fallback){
   return v == null ? (fallback == null ? key : fallback) : v;
 }
 /* Which translation the active locale reads: Kazakh, Russian, or the English
-   definition. */
+   definition. Until English definitions are populated, en falls back to the
+   Russian translation so a freshly loaded vocabulary never looks empty. */
 function transSel(){
   var c = localeCode();
-  return c === 'kk' ? '.trans-kk' : c === 'ru' ? '.trans-ru' : '.trans-def';
+  return c === 'kk' ? '.trans-kk'
+       : c === 'ru' ? '.trans-ru'
+       : '.trans-def:not(:empty), .trans-ru';
 }
 /* The alpha filter sorts on the translation in ru/kk, but on the headword
    itself in en — A–Z over English definitions would be useless. */
