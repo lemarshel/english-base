@@ -22,7 +22,7 @@ const posLabels = {
   other: 'Other'
 };
 
-const levelTargets = [1,2,3,4,5,6,7];
+const levelTargets = [1,2,3,4,5,6];
 
 const ALL_CHANNELS = window.ALL_CHANNELS || [];
 
