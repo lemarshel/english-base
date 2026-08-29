@@ -188,18 +188,40 @@ body.dark #empty-state b{color:#c8c8e0}
           <button class="text-btn" data-text="1">1</button><button class="text-btn" data-text="2">2</button><button class="text-btn" data-text="3">3</button><button class="text-btn" data-text="4">4</button><button class="text-btn" data-text="5">5</button><button class="text-btn" data-text="6">6</button><button class="text-btn" data-text="7">7</button><button class="text-btn" data-text="8">8</button><button class="text-btn" data-text="9">9</button><button class="text-btn" data-text="10">10</button><button class="text-btn" data-text="11">11</button><button class="text-btn" data-text="12">12</button><button class="text-btn" data-text="13">13</button><button class="text-btn" data-text="14">14</button><button class="text-btn" data-text="15">15</button><button class="text-btn" data-text="16">16</button><button class="text-btn" data-text="17">17</button><button class="text-btn" data-text="18">18</button><button class="text-btn" data-text="19">19</button><button class="text-btn" data-text="20">20</button><button class="text-btn" data-text="21">21</button><button class="text-btn" data-text="22">22</button><button class="text-btn" data-text="23">23</button><button class="text-btn" data-text="24">24</button><button class="text-btn" data-text="25">25</button><button class="text-btn" data-text="26">26</button><button class="text-btn" data-text="27">27</button><button class="text-btn" data-text="28">28</button><button class="text-btn" data-text="29">29</button><button class="text-btn" data-text="30">30</button><button class="text-btn" data-text="31">31</button><button class="text-btn" data-text="32">32</button><button class="text-btn" data-text="33">33</button><button class="text-btn" data-text="34">34</button><button class="text-btn" data-text="35">35</button><button class="text-btn" data-text="36">36</button><button class="text-btn" data-text="37">37</button><button class="text-btn" data-text="38">38</button><button class="text-btn" data-text="39">39</button><button class="text-btn" data-text="40">40</button>
         </div>
       </div>
+      <div class="tb-row" id="tb-row-coca">
+        <label class="tb-label" data-i18n="lbl_coca_profile">COCA use:</label>
+        <select id="coca-profile" title="Genre profiles compare normalized per-million frequencies; General uses dispersion and range">
+          <option value="all" data-i18n="coca_all">All profiles</option>
+          <option value="general" data-i18n="coca_general">General</option>
+          <option value="conversational" data-i18n="coca_conversational">Conversational</option>
+          <option value="academic" data-i18n="coca_academic">Academic</option>
+          <option value="fiction" data-i18n="coca_fiction">Fiction</option>
+          <option value="news" data-i18n="coca_news">News / Formal</option>
+          <option value="web" data-i18n="coca_web">Web / Blog</option>
+        </select>
+        <span class="tb-sep"></span>
+        <label class="tb-label" for="coca-rank-min" data-i18n="lbl_coca_rank">Frequency rank:</label>
+        <input class="coca-rank" id="coca-rank-min" type="number" min="1" step="1" inputmode="numeric" data-i18n-ph="coca_rank_min" placeholder="Min">
+        <span aria-hidden="true">–</span>
+        <input class="coca-rank" id="coca-rank-max" type="number" min="1" step="1" inputmode="numeric" data-i18n-ph="coca_rank_max" placeholder="Max">
+        <label class="coca-check"><input type="checkbox" id="coca-exclude-names"> <span data-i18n="coca_exclude_names">Exclude likely names/acronyms</span></label>
+        <button class="cdx-btn" id="coca-reset" data-i18n="coca_reset">Reset COCA</button>
+      </div>
       <div class="tb-row" id="tb-row-pos">
         <label class="tb-label" id="pos-filter-label" data-i18n="lbl_pos">Part of speech:</label>
         <button class="pos-btn active" data-pos="all" id="pos-btn-all">All</button>
-        <button class="pos-btn" data-pos="pos_noun">Nouns</button>
-        <button class="pos-btn" data-pos="pos_verb">Verbs</button>
-        <button class="pos-btn" data-pos="pos_adj">Adj.</button>
-        <button class="pos-btn" data-pos="pos_adv">Adv.</button>
-        <button class="pos-btn" data-pos="pos_det">Det.</button>
-        <button class="pos-btn" data-pos="pos_interj">Interj.</button>
-        <button class="pos-btn" data-pos="pos_conj">Conj.</button>
-        <button class="pos-btn" data-pos="pos_prep">Prep.</button>
-        <button class="pos-btn" data-pos="pos_pron">Pron.</button>
+        <button class="pos-btn" data-pos="n">Nouns</button>
+        <button class="pos-btn" data-pos="v">Verbs</button>
+        <button class="pos-btn" data-pos="j">Adj.</button>
+        <button class="pos-btn" data-pos="r">Adv.</button>
+        <button class="pos-btn" data-pos="p">Pron.</button>
+        <button class="pos-btn" data-pos="i">Prep.</button>
+        <button class="pos-btn" data-pos="a">Articles</button>
+        <button class="pos-btn" data-pos="d">Det.</button>
+        <button class="pos-btn" data-pos="c">Conj.</button>
+        <button class="pos-btn" data-pos="m">Numbers</button>
+        <button class="pos-btn" data-pos="u">Interj.</button>
+        <button class="pos-btn" data-pos="e">Exist. there</button>
       </div>
       <div class="tb-row" id="tb-row-alpha">
         <label class="tb-label" id="alpha-filter-label" data-i18n="lbl_alpha">A–Z:</label>

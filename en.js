@@ -657,7 +657,8 @@ document.addEventListener('contextmenu',function(e){
     ];
     var n = 0;
     document.querySelectorAll('tbody[id]:not(#learned-tbody):not(#fam-tbody) tr').forEach(function(tr){
-      if(tr.classList.contains('sr-hide') || tr.classList.contains('cefr-hide')) return;
+      if(tr.classList.contains('sr-hide') || tr.classList.contains('cefr-hide') ||
+         tr.classList.contains('coca-hide')) return;
       n++;
       function cell(sel){ var el=tr.querySelector(sel); return el ? '"'+el.textContent.trim().replace(/"/g,'""')+'"' : '""'; }
       var trans = cell(transSel());
@@ -1302,8 +1303,10 @@ document.addEventListener('DOMContentLoaded', function(){
       } else tr.classList.remove('cefr-hide');
 
       if(currentPOS && currentPOS !== 'all'){
-        tr.classList.toggle('pos-hide', (tr.getAttribute('data-section')||'') !== currentPOS);
+        tr.classList.toggle('pos-hide', (tr.getAttribute('data-coca-pos')||'') !== currentPOS);
       } else tr.classList.remove('pos-hide');
+
+      applyCocaFilterToRow(tr);
 
       if(currentAlpha && currentAlpha !== 'all'){
         var val = tr.getAttribute(alphaAttr())||'';
@@ -1450,6 +1453,7 @@ function updateEmptyGroups(){
   function rowVisible(tr){
     return !tr.classList.contains('virt-spacer') &&
            !tr.classList.contains('cefr-hide') &&
+           !tr.classList.contains('coca-hide') &&
            !tr.classList.contains('pos-hide') &&
            !tr.classList.contains('alpha-hide') &&
            !tr.classList.contains('text-hide') &&
@@ -1505,7 +1509,7 @@ function updateWordCount(n){
 function getVisibleRowCount(){
   var n = 0;
   getMainRows().forEach(function(tr){
-    if(tr.classList.contains('cefr-hide') || tr.classList.contains('pos-hide') ||
+    if(tr.classList.contains('cefr-hide') || tr.classList.contains('coca-hide') || tr.classList.contains('pos-hide') ||
        tr.classList.contains('alpha-hide') || tr.classList.contains('text-hide') || tr.classList.contains('sr-hide')) return;
     n++;
   });
@@ -1517,7 +1521,7 @@ function renumVisible(){
   var n = 0;
   document.querySelectorAll('tbody[id]:not(#learned-tbody):not(#fam-tbody)').forEach(function(tb){
     Array.prototype.forEach.call(tb.rows, function(tr){
-      if(tr.classList.contains('cefr-hide') || tr.classList.contains('pos-hide') ||
+      if(tr.classList.contains('cefr-hide') || tr.classList.contains('coca-hide') || tr.classList.contains('pos-hide') ||
          tr.classList.contains('alpha-hide') || tr.classList.contains('text-hide') || tr.classList.contains('sr-hide')) return;
       var c = tr.querySelector('.rownum');
       if(c) c.textContent = ++n;
@@ -1738,13 +1742,105 @@ function applyPOSFilter(pos){
   document.querySelectorAll('.pos-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.pos===pos); });
   getMainRows().forEach(function(tr){
     if(pos==='all'){ tr.classList.remove('pos-hide'); }
-    else { tr.classList.toggle('pos-hide', (tr.getAttribute('data-section')||'')!==pos); }
+    else { tr.classList.toggle('pos-hide', (tr.getAttribute('data-coca-pos')||'')!==pos); }
   });
   rebuildView();
 }
 document.querySelectorAll('.pos-btn').forEach(function(btn){
   btn.addEventListener('click', function(){ applyPOSFilter(this.dataset.pos); });
 });
+
+/* ── COCA frequency/register filters ───────────────────────────
+   Genre profiles compare normalized per-million values with overall perMil.
+   General vocabulary instead uses both dispersion and corpus range. */
+var cocaProfile = 'all';
+var cocaRankMin = null;
+var cocaRankMax = null;
+var cocaExcludeNames = false;
+
+function cocaNumber(tr, name){
+  var value = parseFloat(tr.getAttribute(name));
+  return Number.isFinite(value) ? value : 0;
+}
+
+function cocaProfileMatches(tr){
+  if(cocaProfile === 'all') return true;
+  var overall = cocaNumber(tr, 'data-coca-per-mil');
+  if(cocaProfile === 'general'){
+    return cocaNumber(tr, 'data-coca-disp') >= 0.90
+      && cocaNumber(tr, 'data-coca-range') >= 100;
+  }
+  if(cocaProfile === 'conversational'){
+    return Math.max(cocaNumber(tr, 'data-coca-spok-pm'),
+                    cocaNumber(tr, 'data-coca-tvm-pm')) >= overall;
+  }
+  if(cocaProfile === 'academic'){
+    return cocaNumber(tr, 'data-coca-acad-pm') >= overall;
+  }
+  if(cocaProfile === 'fiction'){
+    return cocaNumber(tr, 'data-coca-fic-pm') >= overall;
+  }
+  if(cocaProfile === 'news'){
+    return Math.max(cocaNumber(tr, 'data-coca-news-pm'),
+                    cocaNumber(tr, 'data-coca-mag-pm')) >= overall;
+  }
+  if(cocaProfile === 'web'){
+    return Math.max(cocaNumber(tr, 'data-coca-web-pm'),
+                    cocaNumber(tr, 'data-coca-blog-pm')) >= overall;
+  }
+  return true;
+}
+
+function applyCocaFilterToRow(tr){
+  var rank = cocaNumber(tr, 'data-coca-rank');
+  var inRank = (!cocaRankMin || rank >= cocaRankMin)
+    && (!cocaRankMax || rank <= cocaRankMax);
+  var likelyName = cocaNumber(tr, 'data-coca-caps') >= 0.80
+    || cocaNumber(tr, 'data-coca-all-caps') >= 0.50;
+  var visible = inRank && cocaProfileMatches(tr)
+    && !(cocaExcludeNames && likelyName);
+  tr.classList.toggle('coca-hide', !visible);
+}
+
+function applyCocaFilters(){
+  getMainRows().forEach(applyCocaFilterToRow);
+  rebuildView();
+}
+
+(function initCocaFilters(){
+  var profile = document.getElementById('coca-profile');
+  var rankMin = document.getElementById('coca-rank-min');
+  var rankMax = document.getElementById('coca-rank-max');
+  var exclude = document.getElementById('coca-exclude-names');
+  var reset = document.getElementById('coca-reset');
+  var timer = null;
+  function readRank(input){
+    var value = input && input.value !== '' ? parseInt(input.value, 10) : null;
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+  function sync(){
+    cocaProfile = profile ? profile.value : 'all';
+    cocaRankMin = readRank(rankMin);
+    cocaRankMax = readRank(rankMax);
+    cocaExcludeNames = !!(exclude && exclude.checked);
+    applyCocaFilters();
+  }
+  function delayedSync(){
+    clearTimeout(timer);
+    timer = setTimeout(sync, 120);
+  }
+  if(profile) profile.addEventListener('change', sync);
+  if(rankMin) rankMin.addEventListener('input', delayedSync);
+  if(rankMax) rankMax.addEventListener('input', delayedSync);
+  if(exclude) exclude.addEventListener('change', sync);
+  if(reset) reset.addEventListener('click', function(){
+    if(profile) profile.value = 'all';
+    if(rankMin) rankMin.value = '';
+    if(rankMax) rankMax.value = '';
+    if(exclude) exclude.checked = false;
+    sync();
+  });
+})();
 
 /* ── Alpha filter ────────────────────────────────────────────── */
 var currentAlpha = 'all';
@@ -1787,7 +1883,7 @@ function rebuildView(){
 
   var allRows = [];
   getMainRows().forEach(function(tr){
-    if(!tr.classList.contains('cefr-hide') && !tr.classList.contains('pos-hide') && !tr.classList.contains('alpha-hide') && !tr.classList.contains('text-hide')) allRows.push(tr);
+    if(!tr.classList.contains('cefr-hide') && !tr.classList.contains('coca-hide') && !tr.classList.contains('pos-hide') && !tr.classList.contains('alpha-hide') && !tr.classList.contains('text-hide')) allRows.push(tr);
   });
 
   if(!useFlat){
@@ -1881,6 +1977,7 @@ var VIRTUAL_ROWS = false;
 
 function isRowFiltered(tr){
   return tr.classList.contains('cefr-hide') ||
+         tr.classList.contains('coca-hide') ||
          tr.classList.contains('pos-hide') ||
          tr.classList.contains('alpha-hide') ||
          tr.classList.contains('text-hide') ||
@@ -2197,6 +2294,7 @@ function updateDragState(){
   function rowVisible(tr){
     return !tr.classList.contains('sr-hide') &&
            !tr.classList.contains('cefr-hide') &&
+           !tr.classList.contains('coca-hide') &&
            !tr.classList.contains('pos-hide') &&
            !tr.classList.contains('alpha-hide') &&
            !tr.classList.contains('text-hide');
@@ -2342,6 +2440,7 @@ function updateDragState(){
   function rowVisible(tr){
     return !tr.classList.contains('sr-hide') &&
            !tr.classList.contains('cefr-hide') &&
+           !tr.classList.contains('coca-hide') &&
            !tr.classList.contains('pos-hide') &&
            !tr.classList.contains('alpha-hide') &&
            !tr.classList.contains('text-hide');

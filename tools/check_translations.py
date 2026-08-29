@@ -11,6 +11,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CYRILLIC = re.compile(r'[А-Яа-яЁёӘҒҚҢӨҰҮҺІ]')
+# Anything outside Cyrillic, Latin, digits and ordinary punctuation is almost
+# certainly a slip of the keyboard rather than a real translation.
+STRAY = re.compile(r"[^А-Яа-яЁёӘҒҚҢӨҰҮҺІA-Za-z0-9 ,.;:()'’\-–—/!?«»\"]")
 
 
 def main():
@@ -19,7 +22,8 @@ def main():
     for w in words:
         by_pos.setdefault(w['pos'], set()).add(w['word'])
 
-    problems = {'untranslated_value': [], 'unknown_key': [], 'empty_value': []}
+    problems = {'untranslated_value': [], 'unknown_key': [], 'empty_value': [],
+                'stray_characters': []}
     seen = {}
 
     for lang in ('ru', 'kk'):
@@ -38,6 +42,10 @@ def main():
                     elif not CYRILLIC.search(tr):
                         problems['untranslated_value'].append(
                             '%s: %s -> %r' % (path.name, word, tr))
+                    junk = STRAY.findall(tr)
+                    if junk:
+                        problems['stray_characters'].append(
+                            '%s: %s -> %r (%s)' % (path.name, word, tr, ''.join(junk)))
 
     missing = {}
     for pos, wordset in by_pos.items():

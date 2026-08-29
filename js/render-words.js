@@ -7,7 +7,9 @@
 
    EN_WORDS record:
      { id, word, ipa, ru, kk, def, pos, group, root, affix, cefr,
-       ex, ex_ipa, ex_ru, ex_kk, ex_def }
+       ex, ex_ipa, ex_ru, ex_kk, ex_def, rank, coca_pos, per_mil,
+       disp, range, spok_pm, tvm_pm, fic_pm, acad_pm, news_pm,
+       mag_pm, web_pm, blog_pm, caps_pct, all_caps_pct }
 
    EN_GROUPS record:
      { id, root, root_key, affix, affix_key, standalone,
@@ -74,6 +76,10 @@
   }
 
   function row(w, n, groupId){
+    var cocaTitle = 'COCA rank ' + (w.rank == null ? '—' : w.rank)
+      + ' · ' + (w.per_mil == null ? 0 : w.per_mil) + ' per million'
+      + ' · dispersion ' + (w.disp == null ? 0 : w.disp)
+      + ' · range ' + (w.range == null ? 0 : w.range);
     return '<tr data-key="' + esc(w.word) + '"'
       + ' data-ipa="'   + esc(w.ipa   || '') + '"'
       + ' data-ru="'    + esc(w.ru    || '') + '"'
@@ -85,12 +91,27 @@
       + ' data-affix="' + esc(w.affix || '') + '"'
       + ' data-root-key="'  + esc((w.root  || '').toLowerCase()) + '"'
       + ' data-affix-key="' + esc((w.affix || '').toLowerCase()) + '"'
-      + ' data-cefr="'  + esc((w.cefr || '').toLowerCase()) + '">'
+      + ' data-cefr="'  + esc((w.cefr || '').toLowerCase()) + '"'
+      + ' data-coca-pos="' + esc((w.coca_pos || '').toLowerCase()) + '"'
+      + ' data-coca-rank="' + esc(w.rank || '') + '"'
+      + ' data-coca-per-mil="' + esc(w.per_mil || 0) + '"'
+      + ' data-coca-disp="' + esc(w.disp || 0) + '"'
+      + ' data-coca-range="' + esc(w.range || 0) + '"'
+      + ' data-coca-spok-pm="' + esc(w.spok_pm || 0) + '"'
+      + ' data-coca-tvm-pm="' + esc(w.tvm_pm || 0) + '"'
+      + ' data-coca-fic-pm="' + esc(w.fic_pm || 0) + '"'
+      + ' data-coca-acad-pm="' + esc(w.acad_pm || 0) + '"'
+      + ' data-coca-news-pm="' + esc(w.news_pm || 0) + '"'
+      + ' data-coca-mag-pm="' + esc(w.mag_pm || 0) + '"'
+      + ' data-coca-web-pm="' + esc(w.web_pm || 0) + '"'
+      + ' data-coca-blog-pm="' + esc(w.blog_pm || 0) + '"'
+      + ' data-coca-caps="' + esc(w.caps_pct || 0) + '"'
+      + ' data-coca-all-caps="' + esc(w.all_caps_pct || 0) + '">'
       + '<td data-col="cb" class="cb-cell"><input type="checkbox" class="learn-cb"></td>'
       + '<td data-col="fam" class="fam-cell"><input type="checkbox" class="fam-cb"></td>'
       + '<td data-col="num" class="rownum">' + n + '</td>'
       + '<td data-col="word" class="wordcell">'
-        + '<div class="wd">' + esc(w.word) + '</div>'
+        + '<div class="wd" title="' + esc(cocaTitle) + '">' + esc(w.word) + '</div>'
         + '<div class="ipa">' + esc(w.ipa || '') + '</div>'
       + '</td>'
       + '<td data-col="trans" class="trans-cell">' + transSpans(w) + '</td>'

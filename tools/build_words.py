@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 """Convert the COCA-style lemma frequency spreadsheet into the site's word data.
 
-Reads an .xlsx with columns rank / lemma / PoS / freq / ... and writes:
+Reads an .xlsx with the COCA lemma columns (rank, lemma, PoS, perMil,
+dispersion, range, normalized genre frequencies, and capitalization signals)
+and writes:
 
     data/words.json      the vocabulary as plain JSON
     data/words-data.js   the same records as the two globals index.html loads
 
-Translation, definition, and example fields are emitted empty — the slots exist
-so they can be filled in later without touching the schema.
+Translations are merged from data/ru and data/kk. Definition and example fields
+are emitted empty — the slots exist so they can be filled in later without
+touching the schema.
 
     python tools/build_words.py ~/Downloads/lemmas_60k.xlsx --limit 5000
 """
@@ -39,6 +42,25 @@ POS_MAP = {
 # Section order, matching the table of contents in js/render-words.js.
 POS_ORDER = ['pos_noun', 'pos_verb', 'pos_adj', 'pos_adv', 'pos_det',
              'pos_interj', 'pos_conj', 'pos_prep', 'pos_pron']
+
+# Only normalized per-million columns are retained for genre comparisons. Raw
+# genre counts vary with corpus size and are therefore unsuitable for comparing
+# spoken, fiction, academic, news, web, and other registers.
+COCA_NUMERIC_FIELDS = {
+    'perMil': 'per_mil',
+    '%caps': 'caps_pct',
+    '%allC': 'all_caps_pct',
+    'range': 'range',
+    'disp': 'disp',
+    'blogPM': 'blog_pm',
+    'webPM': 'web_pm',
+    'TVMPM': 'tvm_pm',
+    'spokPM': 'spok_pm',
+    'ficPM': 'fic_pm',
+    'magPM': 'mag_pm',
+    'newsPM': 'news_pm',
+    'acadPM': 'acad_pm',
+}
 
 # CEFR is not in the source, so it is approximated from frequency rank. These
 # bands are a rough proxy, not measured levels — replace them when real CEFR
@@ -83,6 +105,21 @@ def usable(lemma):
     return bool(re.match(r"^[A-Za-z][A-Za-z'\- ]*$", text))
 
 
+def number(value, default=0):
+    """Return a JSON-friendly int/float for a possibly empty spreadsheet cell."""
+    if value in (None, ''):
+        return default
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, (int, float)):
+        return value
+    try:
+        parsed = float(value)
+        return int(parsed) if parsed.is_integer() else parsed
+    except (TypeError, ValueError):
+        return default
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('xlsx')
@@ -93,21 +130,43 @@ def main():
     wb = openpyxl.load_workbook(args.xlsx, read_only=True)
     ws = wb[args.sheet] if args.sheet else wb[wb.sheetnames[0]]
 
+    values = ws.iter_rows(values_only=True)
+    headers = [str(value).strip() if value is not None else '' for value in next(values)]
+    required = {'rank', 'lemma', 'PoS'} | set(COCA_NUMERIC_FIELDS)
+    missing = sorted(required - set(headers))
+    if missing:
+        ap.error('spreadsheet is missing COCA columns: ' + ', '.join(missing))
+
     rows = []
-    for rank, lemma, pos, *_ in ws.iter_rows(min_row=2, values_only=True):
+    for values_row in values:
+        source = dict(zip(headers, values_row))
+        rank = source.get('rank')
+        lemma = source.get('lemma')
+        pos = source.get('PoS')
         if rank is None or not usable(lemma):
             continue
-        rows.append((int(rank), str(lemma).strip(), (pos or '').strip()))
+        rows.append({
+            'rank': int(rank),
+            'lemma': str(lemma).strip(),
+            'coca_pos': str(pos or '').strip().lower(),
+            **{
+                target: number(source.get(column))
+                for column, target in COCA_NUMERIC_FIELDS.items()
+            },
+        })
 
-    rows.sort(key=lambda r: r[0])          # most frequent first
+    rows.sort(key=lambda row: row['rank'])  # most frequent first
     rows = rows[:args.limit]
 
     ru = load_translations('ru')
     kk = load_translations('kk')
 
     words = []
-    for i, (rank, lemma, pos) in enumerate(rows, start=1):
-        section = POS_MAP.get(pos, 'pos_noun')
+    for i, source in enumerate(rows, start=1):
+        rank = source['rank']
+        lemma = source['lemma']
+        coca_pos = source['coca_pos']
+        section = POS_MAP.get(coca_pos, 'pos_noun')
         words.append({
             'id': i,
             'word': lemma,
@@ -126,6 +185,20 @@ def main():
             'ex_kk': '',
             'ex_def': '',
             'rank': rank,
+            'coca_pos': coca_pos,
+            'per_mil': source['per_mil'],
+            'disp': source['disp'],
+            'range': source['range'],
+            'spok_pm': source['spok_pm'],
+            'tvm_pm': source['tvm_pm'],
+            'fic_pm': source['fic_pm'],
+            'acad_pm': source['acad_pm'],
+            'news_pm': source['news_pm'],
+            'mag_pm': source['mag_pm'],
+            'web_pm': source['web_pm'],
+            'blog_pm': source['blog_pm'],
+            'caps_pct': source['caps_pct'],
+            'all_caps_pct': source['all_caps_pct'],
         })
 
     # Group by first letter inside each part of speech.
@@ -184,8 +257,8 @@ def main():
         '   GENERATED by tools/build_words.py — do not hand-edit the arrays below;\n'
         '   edit data/words.json and regenerate, or extend the build script.\n'
         '\n'
-        '   Translation (ru / kk), definition (def), example (ex) and the example\n'
-        '   translations are intentionally empty — the slots are here to be filled in.\n'
+        '   ru / kk translations are merged from data/ru and data/kk. Definition\n'
+        '   and example fields remain available for later enrichment.\n'
         '   Field reference: docs/architecture.md\n'
         '   ========================================================================== */\n'
     )

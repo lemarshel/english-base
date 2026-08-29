@@ -58,13 +58,16 @@ page loads). `js/render-words.js` builds the tables from those two arrays, and
 everything downstream reads the DOM it produces. The full field reference is in
 [docs/architecture.md](docs/architecture.md).
 
-Records currently look like the first line below; the second shows one filled in:
+Records include both learning content and their COCA filter metrics:
 
 ```js
-// as shipped today — the empty fields are the slots waiting for content
 { id:1, word:'inspect', ipa:'', ru:'', kk:'', def:'',
   pos:'pos_verb', group:'g_verb', root:'', affix:'', cefr:'b1',
-  ex:'', ex_ipa:'', ex_ru:'', ex_kk:'', ex_def:'', rank:2505 }
+  ex:'', ex_ipa:'', ex_ru:'', ex_kk:'', ex_def:'',
+  rank:2505, coca_pos:'v', per_mil:12.4, disp:0.94, range:8120,
+  spok_pm:11.2, tvm_pm:15.7, fic_pm:8.1, acad_pm:19.3,
+  news_pm:14.8, mag_pm:13.5, web_pm:9.7, blog_pm:10.2,
+  caps_pct:0.02, all_caps_pct:0 }
 
 // the same record once it is filled in
 { id:1, word:'inspect', ipa:'ɪnˈspekt',
@@ -88,7 +91,9 @@ syllable is highlighted automatically.
 
 - **Search** across headword, IPA, or the active translation, off the main
   thread via `search-worker.js`
-- **Filters** by CEFR level, part of speech, first letter, and study topic
+- **Filters** by CEFR level, exact COCA part of speech, frequency rank, general
+  distribution, conversational/academic/fiction/news/web profiles, likely
+  names/acronyms, first letter, and study topic
 - **Sorting** by word, root, affix, or CEFR level, ascending and descending
 - **Progress tracking** with familiar/learned checkboxes, persisted locally,
   plus named snapshots you can restore
