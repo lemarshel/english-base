@@ -210,7 +210,24 @@ window.I18N = {
     select_station: 'Select station',
     news_channel: 'Channel',
     news_articles: 'Articles',
-    close: 'Close'
+    close: 'Close',
+
+    /* reader */
+    reader: '📖 Reader',
+    reader_title: 'English Base — Reader',
+    reader_h1: 'Reader',
+    to_word_list: '← Word list',
+    lbl_text: 'Text:',
+    text: 'Text',
+    part: 'Part',
+    read_aloud: '▶ Read aloud',
+    stop_reading: '■ Stop',
+    show_glosses: 'Glosses',
+    show_translation: 'Translation',
+    new_words: 'New words',
+    not_ready: 'not ready yet',
+    text_missing: 'This text is not written yet',
+    text_missing_hint: 'Texts are added to data/texts.js one at a time.'
   },
 
   ru: {
@@ -387,7 +404,23 @@ window.I18N = {
     select_station: 'Выбор станции',
     news_channel: 'Канал',
     news_articles: 'Статьи',
-    close: 'Закрыть'
+    close: 'Закрыть',
+
+    reader: '📖 Читалка',
+    reader_title: 'English Base — Читалка',
+    reader_h1: 'Читалка',
+    to_word_list: '← Список слов',
+    lbl_text: 'Текст:',
+    text: 'Текст',
+    part: 'Часть',
+    read_aloud: '▶ Читать вслух',
+    stop_reading: '■ Стоп',
+    show_glosses: 'Подстрочник',
+    show_translation: 'Перевод',
+    new_words: 'Новые слова',
+    not_ready: 'ещё не готов',
+    text_missing: 'Этот текст ещё не написан',
+    text_missing_hint: 'Тексты добавляются в data/texts.js по одному.'
   },
 
   kk: {
@@ -562,6 +595,22 @@ window.I18N = {
     select_station: 'Станцияны таңдау',
     news_channel: 'Арна',
     news_articles: 'Мақалалар',
-    close: 'Жабу'
+    close: 'Жабу',
+
+    reader: '📖 Оқу',
+    reader_title: 'English Base — Оқу бөлімі',
+    reader_h1: 'Оқу бөлімі',
+    to_word_list: '← Сөздер тізімі',
+    lbl_text: 'Мәтін:',
+    text: 'Мәтін',
+    part: 'Бөлім',
+    read_aloud: '▶ Дауыстап оқу',
+    stop_reading: '■ Тоқтату',
+    show_glosses: 'Жолма-жол аударма',
+    show_translation: 'Аударма',
+    new_words: 'Жаңа сөздер',
+    not_ready: 'әлі дайын емес',
+    text_missing: 'Бұл мәтін әлі жазылмаған',
+    text_missing_hint: 'Мәтіндер data/texts.js файлына бірте-бірте қосылады.'
   }
 };

@@ -355,10 +355,17 @@ function setTtsVolume(v, save){
   if(save) localStorage.setItem('eng-volume', String(ttsVolume));
   if(fallbackAudio){ try{ fallbackAudio.volume=ttsVolume; }catch(e){} }
 }
+/* Prefer a natural en-US voice, and a male one where the name says so. The
+   system locale here is Russian, so without this the browser would read the
+   English words with a Russian voice. */
 function pickEnVoice(vs){
-  return vs.find(function(v){return v.lang==='en-US';})
-    || vs.find(function(v){return /^zh/i.test(v.lang);})
-    || vs.find(function(v){return /chinese|mandarin|huihui|yaoyao|kangkang/i.test(v.name);});
+  var en = vs.filter(function(v){ return /^en(-|_)?US/i.test(v.lang); });
+  if(!en.length) en = vs.filter(function(v){ return /^en/i.test(v.lang); });
+  if(!en.length) return null;
+  return en.find(function(v){ return /natural/i.test(v.name) && /guy|andrew|brian|eric|roger|steffan|christopher/i.test(v.name); })
+      || en.find(function(v){ return /natural/i.test(v.name); })
+      || en.find(function(v){ return /guy|david|mark|george|james/i.test(v.name); })
+      || en[0];
 }
 function refreshVoices(){
   if(typeof speechSynthesis==='undefined') return;

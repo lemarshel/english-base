@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>English Base — Reader</title>
+<link rel="stylesheet" href="en.css">
+<link rel="icon" href="data:,">
+<script src="en-head.js"></script>
+</head>
+<body class="preload">
+<script src="en-body.js"></script>
+
+<div id="mobile-header">
+  <span class="mobile-title">English Base</span>
+  <a class="rd-back-mobile" href="index.html" title="Word list">☰</a>
+</div>
+
+<div id="toolbar">
+<div id="tb-main">
+  <div id="tb-sections">
+    <div class="tb-section">
+      <div class="tb-row">
+        <a class="cdx-btn" id="btn-to-words" href="index.html" data-i18n="to_word_list">← Word list</a>
+        <button class="cdx-btn" id="btn-lang-toggle" title="Interface language">EN</button>
+        <div id="mode-group">
+          <button class="mode-btn active" data-mode="light">☀️</button>
+          <button class="mode-btn" data-mode="dark">🌙</button>
+          <button class="mode-btn" data-mode="sepia">📜</button>
+        </div>
+      </div>
+      <div class="tb-row">
+        <label class="tb-label" data-i18n="lbl_text">Text:</label>
+        <button class="cdx-btn" id="btn-prev-text" title="Previous text">‹</button>
+        <select id="text-sel"></select>
+        <button class="cdx-btn" id="btn-next-text" title="Next text">›</button>
+      </div>
+    </div>
+
+    <div class="tb-section">
+      <div class="tb-row" id="part-tabs"></div>
+      <div class="tb-row">
+        <button class="cdx-btn active" id="btn-toggle-gloss" data-i18n="show_glosses">Glosses</button>
+        <button class="cdx-btn active" id="btn-toggle-trans" data-i18n="show_translation">Translation</button>
+      </div>
+    </div>
+
+    <div class="tb-section">
+      <div class="tb-row">
+        <button class="cdx-btn" id="btn-read-all" data-i18n="read_aloud">▶ Read aloud</button>
+      </div>
+      <div class="tb-row">
+        <label class="tb-label" data-i18n="lbl_speed">▶ Speed:</label>
+        <select id="speed-sel">
+          <option value="0.5">0.5×</option>
+          <option value="0.75">0.75×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.25">1.25×</option>
+        </select>
+        <label class="tb-label" data-i18n="lbl_volume">Volume:</label>
+        <input type="range" id="vol-range" min="0" max="100" step="5" value="100">
+        <span id="vol-val">100%</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="title-row">
+  <div class="title-text">
+    <h1>Reader</h1>
+    <div class="subtitle" id="rd-subtitle"></div>
+  </div>
+</div>
+
+<h2 class="rd-heading" id="rd-title"></h2>
+<div id="rd-content"></div>
+
+<script src="i18n.js"></script>
+<script src="text-topics.js"></script>
+<script src="data/texts.js"></script>
+<script src="reader.js"></script>
+
+<div class="donate-bar">
+  <a href="https://www.paypal.me/SultanKulbassov" target="_blank" rel="noopener" class="donate-btn">
+    ❤️ Donate to the creator
+  </a>
+  <span class="donate-info">lemarshel@gmail.com · PayPal: paypal.me/SultanKulbassov</span>
+</div>
+</body></html>
