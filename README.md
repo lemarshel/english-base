@@ -7,9 +7,10 @@ It runs the same engine as [hsk-base](https://github.com/lemarshel/hsk-base),
 adapted for English: IPA in place of pinyin, word roots in place of phonetic
 components, and CEFR levels in place of HSK levels.
 
-**There is no vocabulary in the repository yet.** The interface is complete and
-every control works; `data/words-data.js` holds two empty arrays waiting for
-data.
+**5,000 English headwords are loaded.** Translations, definitions, examples and
+IPA are deliberately empty — every record already carries those slots, ready to
+be filled in. The word list comes from a COCA-style frequency spreadsheet,
+converted by `tools/build_words.py`.
 
 ## Running it
 
@@ -43,28 +44,42 @@ Adding a language means adding one object to `i18n.js`, listing its code in
 `_order`, adding an `alpha-<code>-wrap` block in `index.html` if its alphabet
 is new, and adding one `.ex-trans` line to `en.css`. Nothing in `en.js` changes.
 
-## Adding vocabulary
+## The word data
 
-Fill in the two arrays in `data/words-data.js`; `js/render-words.js` builds the
-tables from them and everything downstream reads the DOM it produces. The full
-field reference is in the header comment of that file, and in
+`data/words-data.js` is **generated — do not hand-edit it.** Rebuild it from a
+frequency spreadsheet with:
+
+```bash
+python tools/build_words.py ~/Downloads/lemmas_60k.xlsx --limit 5000
+```
+
+That writes `data/words.json` (portable JSON) and `data/words-data.js` (what the
+page loads). `js/render-words.js` builds the tables from those two arrays, and
+everything downstream reads the DOM it produces. The full field reference is in
 [docs/architecture.md](docs/architecture.md).
 
+Records currently look like the first line below; the second shows one filled in:
+
 ```js
-window.EN_GROUPS = [
-  { id:'g_spect', root:'spect', root_key:'spect', affix:'in-', affix_key:'in',
-    standalone:false, pos_heading_before:'pos_noun' }
-];
-window.EN_WORDS = [
-  { id:1, word:'inspect', ipa:'ɪnˈspekt',
-    ru:'осматривать; проверять', kk:'қарау; тексеру',
-    def:'to look at something closely',
-    pos:'pos_verb', group:'g_spect', root:'spect', affix:'in-', cefr:'b1',
-    ex:'Please inspect the goods on arrival.', ex_ipa:'pliːz ɪnˈspekt ðə ɡʊdz ɒn əˈraɪvl',
-    ex_ru:'Пожалуйста, осмотрите товар при получении.',
-    ex_kk:'Тауарды алған кезде тексеріңіз.', ex_def:'' }
-];
+// as shipped today — the empty fields are the slots waiting for content
+{ id:1, word:'inspect', ipa:'', ru:'', kk:'', def:'',
+  pos:'pos_verb', group:'g_verb', root:'', affix:'', cefr:'b1',
+  ex:'', ex_ipa:'', ex_ru:'', ex_kk:'', ex_def:'', rank:2505 }
+
+// the same record once it is filled in
+{ id:1, word:'inspect', ipa:'ɪnˈspekt',
+  ru:'осматривать; проверять', kk:'қарау; тексеру',
+  def:'to look at something closely',
+  pos:'pos_verb', group:'g_spect', root:'spect', affix:'in-', cefr:'b1',
+  ex:'Please inspect the goods on arrival.',
+  ex_ipa:'pliːz ɪnˈspekt ðə ɡʊdz ɒn əˈraɪvl',
+  ex_ru:'Пожалуйста, осмотрите товар при получении.',
+  ex_kk:'Тауарды алған кезде тексеріңіз.', ex_def:'' }
 ```
+
+`ru` and `kk` fill the Translation column in their locales, `def` fills it in
+English, and `ex_ru` / `ex_kk` / `ex_def` sit under the example sentence — all
+driven by the same locale button.
 
 Mark stress in the IPA with `ˈ` (primary) and `ˌ` (secondary) — the stressed
 syllable is highlighted automatically.
@@ -108,7 +123,18 @@ news_data.js        offline news reader data (empty)
 
 ## Known gaps
 
-- **No vocabulary yet** — that is the next piece of work.
+- **No translations, definitions, examples, or IPA yet** — 5,000 headwords are
+  in place with those fields empty. That is the next piece of work.
+- **The source list is a decimated sample.** `lemmas_60k.xlsx` contains every
+  tenth lemma from a 60,000-word list, so the 5,000 loaded here span frequency
+  ranks 5–50,045 rather than being the 5,000 most common English words. A
+  complete frequency list would give a much better beginner set.
+- **CEFR levels are approximated from frequency rank**, not measured. Because of
+  the sampling above the distribution skews rare: 100 A1, 150 A2, 250 B1,
+  499 B2, 1,000 C1, 3,001 C2. Replace `CEFR_BANDS` in `tools/build_words.py`
+  when real level data is available.
+- **No root or affix grouping.** There is no morphology data yet, so each part
+  of speech is a single group and the root headers are empty.
 - **No radio stations.** Everything in `channels.js` is a video stream, so the
   Radio option renders disabled until entries are added to `RADIO_CHANNELS`.
 - **The news reader has no data.** The overlay works and opens on an empty
