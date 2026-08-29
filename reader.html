@@ -9,9 +9,11 @@
 <script src="en-body.js"></script>
 
 <div id="mobile-header">
+  <a class="rd-back-mobile" href="index.html" title="Word list">←</a>
   <span class="mobile-title">English Base</span>
-  <a class="rd-back-mobile" href="index.html" title="Word list">☰</a>
+  <button id="hamburger-btn" aria-label="Menu">☰</button>
 </div>
+<div id="mobile-overlay" onclick="document.getElementById('toolbar').classList.remove('mobile-open');this.style.display='none'"></div>
 
 <div id="toolbar">
 <div id="tb-main">
@@ -39,6 +41,10 @@
       <div class="tb-row">
         <button class="cdx-btn active" id="btn-toggle-gloss" data-i18n="show_glosses">Glosses</button>
         <button class="cdx-btn active" id="btn-toggle-trans" data-i18n="show_translation">Translation</button>
+        <span class="tb-sep"></span>
+        <label class="tb-label" data-i18n="lbl_text_size">Size:</label>
+        <button class="rd-size-btn" id="btn-size-down" title="Smaller">A−</button>
+        <button class="rd-size-btn" id="btn-size-up" title="Larger">A+</button>
       </div>
     </div>
 
@@ -63,14 +69,8 @@
 </div>
 </div>
 
-<div class="title-row">
-  <div class="title-text">
-    <h1>Reader</h1>
-    <div class="subtitle" id="rd-subtitle"></div>
-  </div>
-</div>
-
-<h2 class="rd-heading" id="rd-title"></h2>
+<h1 class="rd-heading" id="rd-title"></h1>
+<div class="rd-byline" id="rd-subtitle"></div>
 <div id="rd-content"></div>
 
 <script src="i18n.js"></script>

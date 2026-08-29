@@ -21,8 +21,20 @@ var state = {
   textId: parseInt(localStorage.getItem('eng_reader_text') || '1', 10) || 1,
   part:   parseInt(localStorage.getItem('eng_reader_part') || '1', 10) || 1,
   showGloss: localStorage.getItem('eng_reader_gloss') !== '0',
-  showTrans: localStorage.getItem('eng_reader_trans') !== '0'
+  showTrans: localStorage.getItem('eng_reader_trans') !== '0',
+  size: parseFloat(localStorage.getItem('eng_reader_size') || '1.42') || 1.42
 };
+
+/* One variable scales the English line, its gloss and the sentence
+   translation together, so the three layers keep their proportions. */
+var SIZE_MIN = 1.0, SIZE_MAX = 2.1, SIZE_STEP = 0.12;
+function applySize(){
+  document.documentElement.style.setProperty('--rd-size', state.size.toFixed(2) + 'rem');
+  localStorage.setItem('eng_reader_size', String(state.size));
+  var d = byId('btn-size-down'), u = byId('btn-size-up');
+  if(d) d.disabled = state.size <= SIZE_MIN + 0.001;
+  if(u) u.disabled = state.size >= SIZE_MAX - 0.001;
+}
 
 function byId(id){ return document.getElementById(id); }
 function textById(id){
@@ -67,8 +79,6 @@ function applyLocale(code){
   });
 
   document.title = T('reader_title','English Base — Reader');
-  var h1 = document.querySelector('h1');
-  if(h1) h1.textContent = T('reader_h1','Reader');
   var btn = byId('btn-lang-toggle');
   if(btn) btn.textContent = L._label || code.toUpperCase();
 
@@ -253,7 +263,7 @@ function render(){
 
   if(!text){
     if(titleEl) titleEl.textContent = TOPICS[state.textId] || ('Text ' + state.textId);
-    if(subEl) subEl.textContent = '';
+    if(subEl) subEl.innerHTML = '';
     body.innerHTML = '<div class="rd-empty"><b>' + esc(T('text_missing','This text is not written yet'))
                    + '</b>' + esc(T('text_missing_hint','Texts are added to data/texts.js one at a time.'))
                    + '</div>';
@@ -268,8 +278,10 @@ function render(){
 
   if(titleEl) titleEl.textContent = (text.title && (text.title[loc] || text.title.en)) || '';
   if(subEl){
-    subEl.textContent = T('text','Text') + ' ' + text.id + ' · ' + (TOPICS[text.id] || '')
-                      + ' · ' + T('part','Part') + ' ' + part.n + '/' + PARTS_PER_TEXT;
+    var dot = '<span class="rd-dot">·</span>';
+    subEl.innerHTML = esc(T('text','Text') + ' ' + text.id) + dot
+                    + esc(TOPICS[text.id] || '') + dot
+                    + esc(T('part','Part') + ' ' + part.n + ' / ' + PARTS_PER_TEXT);
   }
 
   body.innerHTML = renderPart(text, part);
@@ -353,6 +365,15 @@ document.addEventListener('DOMContentLoaded', function(){
     if(speaking) stopSpeech(); else readPart();
   });
 
+  var down = byId('btn-size-down'), up = byId('btn-size-up');
+  if(down) down.addEventListener('click', function(){
+    state.size = Math.max(SIZE_MIN, state.size - SIZE_STEP); applySize();
+  });
+  if(up) up.addEventListener('click', function(){
+    state.size = Math.min(SIZE_MAX, state.size + SIZE_STEP); applySize();
+  });
+  applySize();
+
   var g = byId('btn-toggle-gloss');
   if(g) g.addEventListener('click', function(){
     state.showGloss = !state.showGloss;
@@ -389,6 +410,14 @@ document.addEventListener('DOMContentLoaded', function(){
     var cur = localeCode();
     var i = order.indexOf(cur);
     applyLocale(order[(i + 1) % order.length]);
+  });
+
+  /* On narrow screens the toolbar is off-canvas; without this the reader's
+     own controls are unreachable on a phone. */
+  var hb = byId('hamburger-btn'), ov = byId('mobile-overlay'), tb = byId('toolbar');
+  if(hb && tb) hb.addEventListener('click', function(){
+    var open = tb.classList.toggle('mobile-open');
+    if(ov) ov.style.display = open ? 'block' : 'none';
   });
 
   window.addEventListener('beforeunload', stopSpeech);
