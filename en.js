@@ -1037,7 +1037,9 @@ function setLang(code){
     for(var i=0; i<h3.childNodes.length; i++){
       var n = h3.childNodes[i];
       if(n.nodeType !== 3) continue;
-      n.nodeValue = h3.hasAttribute('data-standalone') ? L.individual_words : L.root_prefix;
+      n.nodeValue = h3.hasAttribute('data-standalone') ? L.individual_words
+                  : h3.hasAttribute('data-label') ? L.letter_prefix
+                  : L.root_prefix;
       break;
     }
   });
@@ -1110,7 +1112,7 @@ function buildFilteredView(rows, bySect){
   }
 
   if(bySect){
-    var secOrder = ['pos_noun','pos_verb','pos_adj','pos_adv','pos_mw','pos_particle','pos_conj','pos_prep','pos_pron'];
+    var secOrder = ['pos_noun','pos_verb','pos_adj','pos_adv','pos_det','pos_interj','pos_conj','pos_prep','pos_pron'];
     var secMap = {};
     rows.forEach(function(tr){
       var s = tr.getAttribute('data-section') || 'other';
@@ -1367,6 +1369,15 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
+  /* Section-level lazy attach is disabled.
+     It detached whole POS sections from the document, so the page height
+     collapsed to a fraction of its real size and then rebuilt itself as each
+     section scrolled back in — the scrollbar jumped by tens of thousands of
+     pixels and most sections rendered empty. Row virtualization below keeps the
+     painted row count low without ever changing the document height, which is
+     the part actually worth having. */
+  var LAZY_SECTIONS = false;
+
   function initLazySections(){
     if(_lazyInit) return;
     _lazyInit = true;
@@ -1376,6 +1387,7 @@ document.addEventListener('DOMContentLoaded', function(){
       h2._lazyInfo = info;
       _lazySections.push(info);
     });
+    if(!LAZY_SECTIONS) return;
     if(!('IntersectionObserver' in window)) return;
     _lazyObserver = new IntersectionObserver(onIntersect, { rootMargin: '600px 0px', threshold: 0.01 });
     _lazySections.forEach(function(info){
@@ -1860,6 +1872,12 @@ var _virtTick = false;
 var _virtInitDone = false;
 var VIRT_BUFFER_PX = 1200;
 var VIRT_MIN_ROWS = 80;
+/* Row virtualization keeps the painted row count low, but it drives the page
+   height from an estimate, so the total drifts by a few thousand pixels as the
+   window moves. With today's light rows (headword + IPA only) the whole table
+   renders comfortably, so the estimate is not worth the drift. Turn this back
+   on once translations and examples make rows expensive. */
+var VIRTUAL_ROWS = false;
 
 function isRowFiltered(tr){
   return tr.classList.contains('cefr-hide') ||
@@ -1867,6 +1885,29 @@ function isRowFiltered(tr){
          tr.classList.contains('alpha-hide') ||
          tr.classList.contains('text-hide') ||
          tr.classList.contains('sr-hide');
+}
+
+/* Estimate a row's height for the spacer maths.
+   Measuring a single row is fragile: a detached or not-yet-laid-out row reports
+   0 and the old fallback of 28px was roughly half the real height, which scaled
+   into tens of thousands of pixels of error across a large tbody and made the
+   page jump while scrolling. Average the whole tbody instead, and refuse a
+   result that is obviously wrong. */
+function measureRowHeight(tb, rows){
+  /* Prefer a row that is actually on screen. This stays correct after
+     virtualization starts hiding rows, where a tbody-wide average would not. */
+  for(var i=0;i<rows.length;i++){
+    if(rows[i].classList.contains('virt-hidden')) continue;
+    var h = rows[i].getBoundingClientRect().height;
+    if(h >= 12) return h;
+    if(i > 20) break;
+  }
+  var tbH = tb.getBoundingClientRect().height;
+  if(tbH > 0 && rows.length){
+    var avg = tbH / rows.length;
+    if(avg >= 12) return avg;
+  }
+  return 0; /* not laid out yet — caller defers */
 }
 
 function makeSpacerTbody(colCount){
@@ -1887,6 +1928,7 @@ function makeSpacerTbody(colCount){
 function markVirtualDirty(){ _virtDirty = true; }
 
 function registerVirtualTbody(tb){
+  if(!VIRTUAL_ROWS) return;
   if(!_virtInitDone) return;
   if(!tb) return;
   if(_virtTables.some(function(info){ return info.tbody === tb; })) return;
@@ -1895,7 +1937,8 @@ function registerVirtualTbody(tb){
   var table = tb.closest('table');
   if(!table) return;
   rows.forEach(function(r,i){ r._virtIndex = i; });
-  var defaultHeight = rows[0].getBoundingClientRect().height || 28;
+  var defaultHeight = measureRowHeight(tb, rows);
+  if(!defaultHeight) return;   /* not laid out yet; registered on a later pass */
   var colCount = rows[0].children.length || (table.querySelectorAll('thead th').length || 6);
   var top = makeSpacerTbody(colCount);
   var bottom = makeSpacerTbody(colCount);
@@ -1932,7 +1975,10 @@ function unregisterVirtualTbody(tb){
 
 function recalcVirtualHeights(){
   _virtTables.forEach(function(info){
-    var h = info.defaultHeight || 28;
+    /* Re-measure rather than reuse the old estimate: this runs on resize and
+       on font-size changes, both of which change the row height. */
+    var h = measureRowHeight(info.tbody, info.rows) || info.defaultHeight || 28;
+    info.defaultHeight = h;
     info.heights = new Array(info.rows.length);
     for(var i=0;i<info.rows.length;i++) info.heights[i] = h;
   });
@@ -2025,6 +2071,7 @@ function queueVirtualUpdate(force){
 function initVirtualTables(){
   if(_virtInitDone) return;
   _virtInitDone = true;
+  if(!VIRTUAL_ROWS) return;
   var tbodies = document.querySelectorAll('tbody[id]:not(#learned-tbody):not(#fam-tbody)');
   tbodies.forEach(function(tb){
     var rows = Array.prototype.slice.call(tb.rows);
@@ -2032,7 +2079,8 @@ function initVirtualTables(){
     var table = tb.closest('table');
     if(!table) return;
     rows.forEach(function(r,i){ r._virtIndex = i; });
-    var defaultHeight = rows[0].getBoundingClientRect().height || 28;
+    var defaultHeight = measureRowHeight(tb, rows);
+    if(!defaultHeight) return;   /* not laid out yet; registered on a later pass */
     var colCount = rows[0].children.length || (table.querySelectorAll('thead th').length || 6);
     var top = makeSpacerTbody(colCount);
     var bottom = makeSpacerTbody(colCount);

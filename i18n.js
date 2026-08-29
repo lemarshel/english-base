@@ -119,6 +119,7 @@ window.I18N = {
 
     /* group headers */
     root_prefix: '◆ Root ',
+    letter_prefix: '◆ ',
     individual_words: '◆ Standalone words',
 
     /* learned / familiar sections */
@@ -287,6 +288,7 @@ window.I18N = {
     th_ex: 'Пример',
 
     root_prefix: '◆ Корень ',
+    letter_prefix: '◆ ',
     individual_words: '◆ Отдельные слова',
 
     fam_heading: 'Знакомые, но не выученные',
@@ -444,6 +446,7 @@ window.I18N = {
     th_ex: 'Мысал',
 
     root_prefix: '◆ Түбір ',
+    letter_prefix: '◆ ',
     individual_words: '◆ Жеке сөздер',
 
     fam_heading: 'Таныс, бірақ үйренілмеген',

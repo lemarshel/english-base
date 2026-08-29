@@ -106,21 +106,36 @@ def main():
             'rank': rank,
         })
 
-    # One group per section, in reading order. There is no morphology data yet,
-    # so every group is marked standalone; root groups arrive with that data.
-    present = [p for p in POS_ORDER if any(w['pos'] == p for w in words)]
-    groups = [{
-        'id': 'g_' + p.replace('pos_', ''),
-        'root': '',
-        'root_key': '',
-        'affix': '',
-        'affix_key': '',
-        'standalone': True,
-        'pos_heading_before': p,
-    } for p in present]
+    # Group by first letter inside each part of speech.
+    #
+    # The size matters as much as the grouping: the row virtualizer estimates a
+    # tbody's height from a single measured row, so a 2400-row tbody turns a
+    # few pixels of error into thousands, and the page height thrashes while
+    # scrolling. Small groups keep that error bounded — the same shape hsk-base
+    # has with its phonetic groups. Headers are hidden by default anyway.
+    words.sort(key=lambda w: (POS_ORDER.index(w['pos']), w['word'][0].lower(), w['rank']))
 
-    # words must be grouped in section order so each tbody fills in one pass
-    words.sort(key=lambda w: (POS_ORDER.index(w['pos']), w['rank']))
+    groups = []
+    seen_pos = set()
+    for w in words:
+        letter = w['word'][0].upper()
+        gid = 'g_%s_%s' % (w['pos'].replace('pos_', ''), letter.lower())
+        w['group'] = gid
+        if gid in {g['id'] for g in groups}:
+            continue
+        first_of_section = w['pos'] not in seen_pos
+        seen_pos.add(w['pos'])
+        groups.append({
+            'id': gid,
+            'label': letter,          # rendered instead of a root
+            'root': '',
+            'root_key': '',
+            'affix': '',
+            'affix_key': '',
+            'standalone': False,
+            'pos_heading_before': w['pos'] if first_of_section else None,
+        })
+
     for i, w in enumerate(words, start=1):
         w['id'] = i
 

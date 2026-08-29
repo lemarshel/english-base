@@ -114,11 +114,20 @@
       html += '<h2 class="pos-group" id="' + esc(g.pos_heading_before) + '">'
             + esc(label('sec_' + g.pos_heading_before, g.pos_heading_before)) + ' </h2>';
     }
-    html += '<h3 class="root-group"' + (g.standalone ? ' data-standalone' : '') + '>'
-          + (g.standalone
-              ? esc(label('individual_words','◆ Standalone words'))
-              : esc(label('root_prefix','◆ Root ')) + '<span class="comp">' + esc(g.root || '') + '</span>')
-          + '</h3>';
+    /* A group is one of three things: a root family, a plain label such as an
+       initial letter, or the catch-all standalone group. */
+    var head;
+    if(g.standalone){
+      head = '<h3 class="root-group" data-standalone>'
+           + esc(label('individual_words','◆ Standalone words')) + '</h3>';
+    } else if(g.label){
+      head = '<h3 class="root-group" data-label>'
+           + esc(label('letter_prefix','◆ ')) + '<span class="comp">' + esc(g.label) + '</span></h3>';
+    } else {
+      head = '<h3 class="root-group">'
+           + esc(label('root_prefix','◆ Root ')) + '<span class="comp">' + esc(g.root || '') + '</span></h3>';
+    }
+    html += head;
     html += '<table>' + thead() + '<tbody id="' + esc(g.id) + '">';
     words.forEach(function(w, i){
       html += row(w, i + 1, g.id);

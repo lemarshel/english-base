@@ -159,12 +159,25 @@ English's singular.
 
 Carried over from hsk-base, and worth knowing about when debugging:
 
-- **Lazy sections.** POS sections more than 600px outside the viewport are
-  detached from the DOM and reattached by an `IntersectionObserver`. Rows in a
-  detached section are absent from `document.querySelectorAll`, so read
-  `window._allRows` when you need the full set.
-- **Row virtualization.** Long tbodies render a window of rows with spacer
-  padding above and below.
+- **Lazy sections are disabled** (`LAZY_SECTIONS = false`). The mechanism
+  detached whole POS sections from the document, so the page height collapsed to
+  a fraction of its real size and rebuilt itself as each section scrolled back
+  in. Measured with 5,000 words, the document height swung between 25,000px and
+  155,000px and `scrollTo` missed its target by up to 120,000px — the page
+  scrolled at "light speed", and 8 of 9 sections rendered with no rows at all.
+- **Row virtualization is disabled** (`VIRTUAL_ROWS = false`). It renders a
+  window of rows with spacer padding sized from an *estimated* row height, which
+  left the document height drifting by ~4,600px while scrolling. With today's
+  light rows the whole table renders comfortably: turning it off pinned the
+  height swing at zero and made scrolling 4x cheaper (1508ms to 375ms across
+  twelve jumps). Turn it back on when translations and examples make rows
+  expensive — `measureRowHeight()` now derives the height from a laid-out row
+  rather than falling back to a hardcoded 28px, which was about half the real
+  49px and was the source of the drift.
+- **Group size matters.** The vocabulary is split into ~135 groups — one per
+  initial letter within each part of speech — rather than one giant group per
+  section. That bounds any estimation error and matches the shape hsk-base has
+  with its phonetic groups.
 - **Flat filtered view.** Any active search, level filter, topic filter, or
   non-default sort switches to a single flat table in `#filtered-view`; the
   sectioned view returns when everything is cleared.
