@@ -54,6 +54,25 @@ def cefr_for(rank):
     return 'c2'
 
 
+def load_translations(kind):
+    """Merge every data/<kind>/*.json into {pos: {word: translation}}.
+
+    Translations live apart from the generated word data so the list can be
+    rebuilt from the spreadsheet without losing them, and so each part of speech
+    can be worked on in its own file.
+    """
+    merged = {}
+    folder = ROOT / 'data' / kind
+    if not folder.is_dir():
+        return merged
+    for path in sorted(folder.glob('*.json')):
+        with path.open(encoding='utf-8') as f:
+            data = json.load(f)
+        for pos, entries in data.items():
+            merged.setdefault(pos, {}).update(entries)
+    return merged
+
+
 def usable(lemma):
     """Skip slashed alternatives and date compounds — 'his/her', 'mid-1930s'."""
     if not lemma:
@@ -83,6 +102,9 @@ def main():
     rows.sort(key=lambda r: r[0])          # most frequent first
     rows = rows[:args.limit]
 
+    ru = load_translations('ru')
+    kk = load_translations('kk')
+
     words = []
     for i, (rank, lemma, pos) in enumerate(rows, start=1):
         section = POS_MAP.get(pos, 'pos_noun')
@@ -90,8 +112,8 @@ def main():
             'id': i,
             'word': lemma,
             'ipa': '',
-            'ru': '',
-            'kk': '',
+            'ru': ru.get(section, {}).get(lemma, ''),
+            'kk': kk.get(section, {}).get(lemma, ''),
             'def': '',
             'pos': section,
             'group': 'g_' + section.replace('pos_', ''),
@@ -187,6 +209,16 @@ def main():
           % (len(words), min(w['rank'] for w in words), max(w['rank'] for w in words)))
     print('sections:', {k: counts[k] for k in POS_ORDER if k in counts})
     print('cefr:', {k: levels[k] for k in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2'] if k in levels})
+
+    for lang in ('ru', 'kk'):
+        done = sum(1 for w in words if w[lang])
+        if done or lang == 'ru':
+            missing = {}
+            for w in words:
+                if not w[lang]:
+                    missing[w['pos']] = missing.get(w['pos'], 0) + 1
+            print('%s: %d/%d translated' % (lang, done, len(words)),
+                  ('| missing: ' + str(missing)) if missing else '| complete')
 
 
 if __name__ == '__main__':
